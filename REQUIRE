@@ -1,6 +1,5 @@
 julia 0.2-
 Distributions
-Gadfly
 Cubature
 Optim
 
