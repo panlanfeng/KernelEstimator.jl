@@ -1,1 +1,1 @@
-incldue("test/testreg.jl")
+include("test/testreg.jl")
