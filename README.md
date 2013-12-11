@@ -4,7 +4,7 @@ The Julia package for nonparametric density estimate and regression.
 [![Build Status](https://travis-ci.org/panlanfeng/Nonparametric.jl.png)](https://travis-ci.org/panlanfeng/Nonparametric.jl)
 
 ## Functions
-This package provides the follwoing functions:	
+This package provides the following functions:	
  - `KernelDensity(xeval, xdata, kernel::Function, h)` do kernel density estimate  
 
  - `LP0(xeval, xdata, ydata::Vector, kernel::Function,h)` do local constant regression (or Nadaraya-Watson)  
@@ -19,9 +19,9 @@ This package provides the follwoing functions:
 
  - `BandwidthLSCVReg(xdata, ydata::Vector, reg::Function, kernel::Function)` select bandwidth for regression using leave-one-out  
 
- - `BootstrapCB(B::Int64, xeval, xdata, ydata::Vector,testmodel::Function, reg::Function, kernel::Function, h)` compute 95% wild bootstrap confidence band at `xeval` for LP0  
+ - `BootstrapCB(B::Int64,xeval,xdata,ydata,testmodel::Function,reg,kernel,h)` compute 95% wild bootstrap confidence band at `xeval` for LP0  
 
- - `BootstrapGoodness(B::Int64, xdata, ydata::Vector, testmodel:Function, reg::Function, kernel::Function, h)`: do the goodness of fit test for `testmodel` based on wild bootstrap, where `testmodel` should take parameters like `testmodel(xdata, ydata::Vector)` and return predicted values at `xdata`. For example, 
+ - `BootstrapGoodness(B::Int64, xdata, ydata, testmodel:Function, reg, kernel, h)`: do the goodness of fit test for `testmodel` based on wild bootstrap, where `testmodel` should be a function taking parameters like `testmodel(xdata, ydata::Vector)` and returning predicted values at `xdata`. For example, 
   
         function SemiPredict(xdata::Matrix{Float64}, ydata::Vector{Float64})
           xb=xdata*Sind(xdata,ydata,GaussianKernel)
@@ -92,9 +92,9 @@ In the above functions,
 ##Reference
  - Lecture notes from Dr. Song Xi Chen  
 
- - W. Hardle and J. S. Marron (1991). Bootstrap Simultaneous Error Bars for Nonparametric Regression. The Annals of Statistics. Vol. 19, No. 2 (Jun., 1991), pp. 778-796  
+ - W. Hardle and J. S. Marron (1991). Bootstrap Simultaneous Error Bars for Nonparametric Regression. _The Annals of Statistics_. Vol. 19, No. 2 (Jun., 1991), pp. 778-796  
 
- - W.Hardle and E. Mammen (1993). Comparing Nonparametric Versus Parametric Regression Fits. The Annals of Statistics. Vol. 21, No. 4 (Dec., 1993), pp. 1926-1947  
+ - W.Hardle and E. Mammen (1993). Comparing Nonparametric Versus Parametric Regression Fits. _The Annals of Statistics_. Vol. 21, No. 4 (Dec., 1993), pp. 1926-1947  
 
 
 
