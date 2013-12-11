@@ -1,6 +1,6 @@
 
 #Single index model
-function Sind(xdata::Matrix{Float64}, ydata::Vector{Float64}, kernel::Function)
+function Sind(xdata::Matrix{Float64}, ydata::Vector{Float64}, kernel::Function=GaussianKernel)
   (n,p)=size(xdata)
   beta0=zeros(p)
   beta0=linreg(xdata,ydata)[2:(p+1)]

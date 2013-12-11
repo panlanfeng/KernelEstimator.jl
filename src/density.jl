@@ -1,5 +1,5 @@
 #univariate kernel density
-function KernelDensity{T<:Float64}(xeval::Float64, xdata::Vector{T}, kernel::Function, h::Float64)
+function KernelDensity(xeval::Float64, xdata::Vector{Float64}, kernel::Function=GaussianKernel, h::Float64=BandwidthLSCV(xdata, kernel))
   if h <= 0.0
     return Inf
   end
@@ -7,21 +7,16 @@ function KernelDensity{T<:Float64}(xeval::Float64, xdata::Vector{T}, kernel::Fun
   for i = 1:length(xdata)
     s0 += kernel(xeval, xdata[i], h)
   end
-  fhat=s0 / length(xdata)
-  fhat::Float64
+  return s0 / length(xdata)
 end
 
-KernelDensity{R<:Float64, T<:Float64}(xeval::Vector{R}, xdata::Vector{T}, 
-kernel::Function, h::Float64)=[KernelDensity(xeval[i], xdata, kernel, h)::Float64 for i=1:length(xeval)]
+KernelDensity(xeval::Vector{Float64}, xdata::Vector{Float64}, kernel::Function=GaussianKernel, 
+    h::Float64=BandwidthLSCV(xdata,kernel))=[KernelDensity(xeval[i], xdata, kernel, h)::Float64 for i=1:length(xeval)]
 
-KernelDensity{T<:Float64}(xeval::Float64, xdata::Vector{T}, kernel::Function, 
-BWSelector::Function)=KernelDensity(xeval, xdata,kernel, BWSelector(xdata, kernel))
-KernelDensity{R<:Float64,T<:Float64}(xeval::Vector{R}, xdata::Vector{T}, kernel::Function, 
-BWSelector::Function)=KernelDensity(xeval, xdata,kernel, BWSelector(xdata, kernel))
 
 #MultiVariate kernel density
-function KernelDensity{R<: Float64,T<:Float64}(xeval::Vector{R}, xdata::Matrix{T}, 
-  kernel::Function, h::Vector{Float64})
+function KernelDensity(xeval::Vector{Float64}, xdata::Matrix{Float64}, 
+  kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
   
   if any(h .<= 0)
     return Inf
@@ -47,8 +42,8 @@ function KernelDensity{R<: Float64,T<:Float64}(xeval::Vector{R}, xdata::Matrix{T
   s0 / length(xdata)
 end
 
-function KernelDensity{R<: Float64,T<:Float64}(xeval::Matrix{R}, xdata::Matrix{T}, 
-  kernel::Function, h::Vector{Float64})
+function KernelDensity(xeval::Matrix{Float64}, xdata::Matrix{Float64}, 
+  kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
   
   if any(h .<= 0)
     return Inf
@@ -69,10 +64,4 @@ function KernelDensity{R<: Float64,T<:Float64}(xeval::Matrix{R}, xdata::Matrix{T
   den  
 end
 
-KernelDensity{R<: Float64,T<:Float64}(xeval::Matrix{R}, xdata::Matrix{T}, 
-    kernel::Function, BandwidthSelector::Function)=KernelDensity(xeval, xdata, kernel, 
-    BandwidthSelector(xdata,kernel))
-KernelDensity{R<: Float64,T<:Float64}(xeval::Vector{R}, xdata::Matrix{T}, 
-    kernel::Function, BandwidthSelector::Function)=KernelDensity(xeval, xdata, kernel, 
-    BandwidthSelector(xdata,kernel))
 

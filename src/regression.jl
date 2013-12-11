@@ -1,33 +1,23 @@
 #univariate nadaraya-watson estimate
-function LP0{T <: Float64, S<:Float64}(xeval::Float64, xdata::Array{T, 1}, 
-  ydata::Array{S, 1}, kernel::Function, h::Float64)
+function LP0(xeval::Float64, xdata::Vector{Float64}, ydata::Vector{Float64}, kernel::Function=GaussianKernel, h::Float64=BandwidthReg(xdata, ydata, LP0, kernel))
   n=length(xdata)
   s0=0.0
   sy0=0.0
   for i in 1:n
-    tmp=kernel(xeval, xdata[i], h)::Float64
+    tmp=kernel(xeval, xdata[i], h)
     s0 += tmp
     sy0 += tmp * ydata[i]
   end
-  fhat=sy0 / s0
-  fhat::Float64
+  sy0 / s0
 end
 
-LP0{R<:Float64, T <: Float64, S<:Float64}(xeval::Vector{R}, xdata::Vector{T}, 
-ydata::Vector{S}, kernel::Function, h::Float64)=[LP0(xeval[i], xdata,ydata,kernel,
-  h)::Float64 for i=1:length(xeval)]
-
-LP0{T <: Float64, S<:Float64}(xeval::Float64, xdata::Vector{T}, ydata::Vector{S}, 
-kernel::Function, BWSelector::Function)=LP0(xeval, xdata, ydata, kernel, 
-BWSelector(xdata,ydata,LP0,kernel)::Float64)
-LP0{R<:Float64,T <: Float64, S<:Float64}(xeval::Vector{R}, xdata::Vector{T}, ydata::Vector{S}, 
-kernel::Function, BWSelector::Function)=LP0(xeval, xdata, ydata, kernel, 
-BWSelector(xdata,ydata,LP0, kernel)::Float64)
+LP0(xeval::Vector{Float64}, xdata::Vector{Float64}, ydata::Vector{Float64}, kernel::Function=GaussianKernel, 
+h::Float64=BandwidthLSCVReg(xdata,ydata,LP0, kernel))=[LP0(xeval[i], xdata,ydata,kernel,h)::Float64 for i=1:length(xeval)]
 
 
 ##univariate local linear
-function LP1{T <: Float64, S<:Float64}(xeval::Float64, xdata::Vector{T}, ydata::Vector{S}, 
-kernel::Function, h::Float64)
+function LP1(xeval::Float64, xdata::Vector{Float64}, ydata::Vector{Float64},
+kernel::Function=GaussianKernel, h::Float64=BandwidthLSCVReg(xdata,ydata,LP1,kernel))
   
   n=length(xdata)
   s0=0.0
@@ -47,18 +37,11 @@ kernel::Function, h::Float64)
   fhat=(s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1)
   fhat::Float64
 end
-LP1{R<:Float64,T <: Float64, S<:Float64}(xeval::Vector{R}, xdata::Array{T, 1}, ydata::Array{S, 1}, 
-kernel::Function, h::Float64)=[LP1(xeval[i], xdata,ydata,kernel,h)::Float64 for i=1:length(xeval)]
-
-LP1{T <: Float64, S<:Float64}(xeval::Float64, xdata::Array{T, 1}, ydata::Array{S, 1}, 
-kernel::Function, BWSelector::Function)=LP1(xeval,xdata,ydata,kernel,BWSelector(xdata,ydata,LP1,kernel))
-LP1{R<:Float64,T <: Float64, S<:Float64}(xeval::Vector{R}, xdata::Array{T, 1}, ydata::Array{S, 1}, 
-kernel::Function, BWSelector::Function)=LP1(xeval,xdata,ydata,kernel,BWSelector(xdata,ydata,LP1,kernel))
-
+LP1(xeval::Vector{Float64}, xdata::Array{Float64, 1}, ydata::Array{Float64, 1}, 
+kernel::Function=GaussianKernel, h::Float64=BandwidthLSCVReg(xdata,ydata,LP1,kernel))=[LP1(xeval[i], xdata,ydata,kernel,h)::Float64 for i=1:length(xeval)]
 
 #multi-variate nadaraya-watson
-function LP0(xeval::Vector{Float64}, xdata::Matrix{Float64}, 
-  ydata::Vector{Float64}, kernel::Function, h::Vector{Float64})
+function LP0(xeval::Vector{Float64}, xdata::Matrix{Float64}, ydata::Vector{Float64}, kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCVReg(xdata,ydata,LP0,kernel))
     
   (n,p)=size(xdata)
   if length(xeval) != p || length(h) !=p
@@ -77,7 +60,7 @@ end
 
 #
 function LP0(xeval::Matrix{Float64}, xdata::Matrix{Float64}, 
-  ydata::Vector{Float64}, kernel::Function, h::Vector{Float64})
+  ydata::Vector{Float64}, kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCVReg(xdata,ydata,LP0,kernel))
 
   (m,p)=size(xeval)
   den=zeros(m)
@@ -91,11 +74,4 @@ function LP0(xeval::Matrix{Float64}, xdata::Matrix{Float64},
   den
 end
 
-
-LP0{R<:Float64, T<:Float64, S<:Float64}(xeval::Vector{R}, xdata::Matrix{T}, 
-    ydata::Vector{S}, kernel::Function, BandwidthSelector::Function)=LP0(xeval, xdata, ydata, kernel, 
-BandwidthSelector(xdata, ydata, LP0, kernel))
-LP0{R<:Float64, T<:Float64, S<:Float64}(xeval::Matrix{R}, xdata::Matrix{T}, 
-    ydata::Vector{S}, kernel::Function, BandwidthSelector::Function)=LP0(xeval, xdata, ydata, kernel, 
-    BandwidthSelector(xdata, ydata, LP0,kernel))
 

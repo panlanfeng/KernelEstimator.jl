@@ -1,13 +1,13 @@
 #Bootstrap confidence band for univariate nonparametric regression
-function BootstrapCB{R<:Float64, T<:Float64, S<:Float64}(B::Int64, xeval::Vector{R}, 
-  xdata::Vector{S}, ydata::Vector{T}, reg::Function, kernel::Function, h::Real)
+function BootstrapCB(B::Int64, xeval::Vector{Float64}, 
+  xdata::Vector{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel, h::Float64=BandwidthLSCVReg(xdata,ydata,reg,kernel))
   
   n=length(xdata)
   y_matrix=zeros(B, length(xeval))
   cb=zeros(2, length(xeval))
   
   yhat=reg(xdata, xdata, ydata, kernel, h)
-  mhat=reg(xdata, xdata, ydata, kernel, 1.2*h)
+  mhat=reg(xdata, xdata, ydata, kernel, h)
   e = ydata .- yhat
   coef=[-1,0,2]
 
@@ -24,8 +24,8 @@ function BootstrapCB{R<:Float64, T<:Float64, S<:Float64}(B::Int64, xeval::Vector
 end
 
 #Bootstrap confidence band for multivariate nonparametric regression
-function BootstrapCB{R<:Float64, T<:Float64, S<:Float64}(B::Int64, xeval::Matrix{R}, 
-  xdata::Matrix{S}, ydata::Vector{T}, reg::Function, kernel::Function, h::Vector{Float64})
+function BootstrapCB(B::Int64, xeval::Matrix{Float64}, 
+  xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCVReg(xdata,ydata,reg,kernel))
   
   (n, p)=size(xdata)
   (m,p1 )= size(xeval)
@@ -37,7 +37,7 @@ function BootstrapCB{R<:Float64, T<:Float64, S<:Float64}(B::Int64, xeval::Matrix
   cb=zeros(2, m)
   
   yhat=reg(xdata, xdata, ydata, kernel, h)
-  mhat=reg(xdata, xdata, ydata, kernel, 1.5*h)
+  mhat=reg(xdata, xdata, ydata, kernel, h)
   e = ydata .- yhat
   coef=[-1,0,2]
 
