@@ -17,7 +17,7 @@ function GaussianKernel(xeval::Vector{Float64}, xi::Vector{Float64}, h::Vector{F
   end
   p=length(xi)
 
-  exp(-wsumsq(1./h, xeval, xi)) / (2*pi)^(p/2) / prod(h)
+  exp(-wsumsqdiff(1./h, xeval, xi)) / (2*pi)^(p/2) / prod(h)
 
 end
 GaussianKernel2(x::Float64) = GaussianKernel(x, 0.0, sqrt(2))
@@ -60,13 +60,14 @@ function EKernel2(x::Float64)
 
 end  
 function EKernel2(x::Vector{Float64})
+    ax=abs(x)
     if any(ax .> 2.0)
         return 0.0
     end
-    p=length(x)
+    p=length(ax)
     tmp=1.0
     for i in 1:p
-        tmp *= Ekernel2(x[i])
+        tmp *= Ekernel2(ax[i])
     end
     tmp
 end  

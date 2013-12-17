@@ -1,5 +1,5 @@
 #univariate kernel density
-function KernelDensity(xeval::Float64, xdata::Vector{Float64}, kernel::Function=GaussianKernel, h::Float64=BandwidthLSCV(xdata, kernel))
+function KernelDensity(xeval::Float64, xdata::Vector{Float64}, kernel::KernelType=Gaussian, h::Float64=BandwidthLSCV(xdata, kernel))
   if h <= 0.0
     return Inf
   end
@@ -10,13 +10,13 @@ function KernelDensity(xeval::Float64, xdata::Vector{Float64}, kernel::Function=
   return s0 / length(xdata)
 end
 
-KernelDensity(xeval::Vector{Float64}, xdata::Vector{Float64}, kernel::Function=GaussianKernel, 
+KernelDensity(xeval::Vector{Float64}, xdata::Vector{Float64}, kernel::KernelType=Gaussian, 
     h::Float64=BandwidthLSCV(xdata,kernel))=[KernelDensity(xeval[i], xdata, kernel, h)::Float64 for i=1:length(xeval)]
 
 
 #MultiVariate kernel density
 function KernelDensity(xeval::Vector{Float64}, xdata::Matrix{Float64}, 
-  kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
+  kernel::KernelType=Gaussian, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
   
   if any(h .<= 0)
     return Inf
@@ -43,7 +43,7 @@ function KernelDensity(xeval::Vector{Float64}, xdata::Matrix{Float64},
 end
 
 function KernelDensity(xeval::Matrix{Float64}, xdata::Matrix{Float64}, 
-  kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
+  kernel::KernelType=Gaussian, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
   
   if any(h .<= 0)
     return Inf
@@ -59,7 +59,7 @@ function KernelDensity(xeval::Matrix{Float64}, xdata::Matrix{Float64},
       xi_eval[j]=xeval[i, j]
     end
     
-    den[i]=KernelDensity(xi_eval, xdata, GaussianKernel, h)
+    den[i]=KernelDensity(xi_eval, xdata, kernel, h)
   end
   den  
 end
