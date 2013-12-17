@@ -19,9 +19,9 @@ This package provides the following functions:
 
  - `BandwidthLSCVReg(xdata, ydata::Vector, reg::Function, kernel::Function)` select bandwidth for regression using leave-one-out  
 
- - `BootstrapCB(B::Int64,xeval,xdata,ydata,testmodel::Function,reg,kernel,h)` compute 95% wild bootstrap confidence band at `xeval` for LP0  
+ - `BootstrapCB(B::Int64,xeval,xdata,ydata,testmodel::Function,reg,kernel,h)` compute 95% wild bootstrap confidence band at `xeval` for `LP0`  
 
- - `BootstrapGoodness(B::Int64, xdata, ydata, testmodel:Function, reg, kernel, h)`: do the goodness of fit test for `testmodel` based on wild bootstrap, where `testmodel` should be a function taking parameters like `testmodel(xdata, ydata::Vector)` and returning predicted values at `xdata`. For example, 
+ - `BootstrapGoodness(B::Int64, xdata, ydata, testmodel::Function, reg, kernel, h)`: do the goodness of fit test for `testmodel` based on wild bootstrap, where `testmodel` should be a function taking parameters like `testmodel(xdata, ydata::Vector)` and returning predicted values at `xdata`. For example, 
   
         function SemiPredict(xdata::Matrix{Float64}, ydata::Vector{Float64})
           xb=xdata*Sind(xdata,ydata,GaussianKernel)
