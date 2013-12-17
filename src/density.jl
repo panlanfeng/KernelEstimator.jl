@@ -5,7 +5,7 @@ function KernelDensity(xeval::Float64, xdata::Vector{Float64}, kernel::KernelTyp
   end
   s0=0.0
   for i = 1:length(xdata)
-    s0 += kernel(xeval, xdata[i], h)
+    s0 += kernel.Density(xeval, xdata[i], h)
   end
   return s0 / length(xdata)
 end
@@ -37,7 +37,7 @@ function KernelDensity(xeval::Vector{Float64}, xdata::Matrix{Float64},
     for j=1:p
       xi[j]=xdata[i,j]
     end
-    s0 = s0 + kernel(xeval, xi, h)
+    s0 = s0 + kernel.Density(xeval, xi, h)
   end
   s0 / length(xdata)
 end

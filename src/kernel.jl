@@ -67,7 +67,7 @@ function EKernel2(x::Vector{Float64})
     p=length(ax)
     tmp=1.0
     for i in 1:p
-        tmp *= Ekernel2(ax[i])
+        tmp *= EKernel2(ax[i])
     end
     tmp
 end  

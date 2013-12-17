@@ -37,7 +37,6 @@ end
 #where K' = K^{(2)} - 2K
 #When Kernel is normal it is 
 function BandwidthLSCV(xdata::Matrix{Float64}, kernel::KernelType=Gaussian) 
-
     (n, p)=size(xdata)  
     h0=BandwidthNormalReference(reshape(xdata[:,1], n))  
     function res(h::Vector{Float64})  
@@ -49,19 +48,17 @@ function BandwidthLSCV(xdata::Matrix{Float64}, kernel::KernelType=Gaussian)
             continue
           end
           #tmp += kernel(xdata[i], xdata[j], sqrt(2)*h) - 2*kernel(xdata[i], xdata[j], h)
-    #          xdiff = ((xdata[i] - xdata[j]) / h)^2
-    #          tmp += (2^(-1/2)*exp(-xdiff/4) - 2*exp(-xdiff/2))
-          xdiff=(xdata[i] .- xdata[j]) ./ h
+          #xdiff = ((xdata[i,:] .- xdata[j,:]) ./ h)^2
+          #tmp += (2^(-1/2)*exp(-xdiff/4) - 2*exp(-xdiff/2))
+          xdiff=[(xdata[i,k] - xdata[j,k]) / h[k] for k in 1:p]
           tmp1 += kernel.Convolution(xdiff)
           tmp2 += kernel.Density(xdiff,zeros(p),ones(p))
         end
       end
+     # (tmp1 / (n ^ 2) - tmp2 / (n * (n - 1)) * 2 + kernel.Convolution(zeros(p))/n)/prod(h)
 
-      (tmp1 / (n ^ 2) - tmp2 / (n * (n - 1)) * 2 + kernel.Convolution(zeros(p))/n)/prod(h)
     end
- 
    return optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1/n
-
 end
 
 #leave-one-out LSCV. Using 
