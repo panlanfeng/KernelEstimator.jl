@@ -17,7 +17,7 @@ function GaussianKernel(xeval::Vector{Float64}, xi::Vector{Float64}, h::Vector{F
   end
   p=length(xi)
 
-  exp(-wsumsqdiff(1./h, xeval, xi)) / (2*pi)^(p/2) / prod(h)
+  exp(-wsumsqdiff(1./(h.^2), xeval, xi)) / (2*pi)^(p/2) / prod(h)
 
 end
 GaussianKernel2(x::Float64) = GaussianKernel(x, 0.0, sqrt(2))
