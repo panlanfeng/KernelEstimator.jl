@@ -50,12 +50,12 @@ function BandwidthLSCV(xdata::Matrix{Float64}, kernel::KernelType=Gaussian)
           #tmp += kernel(xdata[i], xdata[j], sqrt(2)*h) - 2*kernel(xdata[i], xdata[j], h)
           #xdiff = ((xdata[i,:] .- xdata[j,:]) ./ h)^2
           #tmp += (2^(-1/2)*exp(-xdiff/4) - 2*exp(-xdiff/2))
-          xdiff=[(xdata[i,k] - xdata[j,k]) / h[k] for k in 1:p]
+          xdiff=[((xdata[i,k] - xdata[j,k]) / h[k])::Float64 for k in 1:p]
           tmp1 += kernel.Convolution(xdiff)
           tmp2 += kernel.Density(xdiff,zeros(p),ones(p))
         end
       end
-     # (tmp1 / (n ^ 2) - tmp2 / (n * (n - 1)) * 2 + kernel.Convolution(zeros(p))/n)/prod(h)
+      (tmp1 / (n ^ 2) - tmp2 / (n * (n - 1)) * 2 + kernel.Convolution(zeros(p))/n)/prod(h)
 
     end
    return optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1/n

@@ -17,7 +17,7 @@ using NumericExtensions
 
 
 
-export  GaussianKernel, KernelDensity, EKernel, Gaussian, Epanechnikov, 
+export  GaussianKernel, KernelDensity, EKernel, Gaussian, Epanechnikov, KernelType,
         LP0, LP1, 
         BandwidthNormalReference, BandwidthLSCV, BandwidthLSCVReg, 
         Sind,
