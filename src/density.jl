@@ -59,7 +59,7 @@ function KernelDensity(xeval::Matrix{Float64}, xdata::Matrix{Float64},
       xi_eval[j]=xeval[i, j]
     end
     
-    den[i]=KernelDensity(xi_eval, xdata, GaussianKernel, h)
+    den[i]=KernelDensity(xi_eval, xdata, kernel, h)
   end
   den  
 end

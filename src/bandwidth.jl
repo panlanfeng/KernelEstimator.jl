@@ -65,39 +65,25 @@ function BandwidthLSCV(xdata::Matrix{Float64}, kernel::Function=GaussianKernel)
   end
 end
 
-function leave_one_out(xdata::Vector{Float64}, ydata::Vector{Float64},reg::Function, 
-  kernel::Function, hv::Vector{Float64})
-  h=hv[1]
-  n=length(ydata) 
-  ls=0.0
-  for i in 1:n
-    ls += (ydata[i] - reg(xdata[i], xdata[[1:(i-1), (i+1):end]], 
-  ydata[[1:(i-1), (i+1):end]], kernel, h)[1])^2
-  end
-  ls = ls / n
-  ls::Float64
-end
+
 
 #leavee-one-out LSCV. Using 
 function BandwidthLSCVReg(xdata::Vector{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel)
 
   n=length(xdata)
   h0= BandwidthNormalReference(xdata)
-  function res(x::Vector{Float64})
-    leave_one_out(xdata,ydata,reg,kernel,x)
+  function res(h::Vector{Float64})
+    ls=0.0
+    for i in 1:n
+      ls += (ydata[i]-reg(xdata[i], xdata[[1:(i-1), (i+1):end]],ydata[[1:(i-1), (i+1):end]], kernel, h[1]))^2
+    end
+    ls / n
   end
   optimize(res, [h0], iterations=100).minimum[1] + .1/n
 end
 
 
-function leave_one_out(xdata::Matrix{Float64}, ydata::Vector{Float64},reg::Function, 
-  kernel::Function, h::Vector{Float64})
-  (n,p)=size(xdata) 
-  
-  yhat=[reg(xdata[i, :], xdata[[1:(i-1), (i+1):end], :], 
-    ydata[[1:(i-1), (i+1):end]], kernel, h)[1]::Float64 for i in 1:n]
-  NumericExtensions.vnormdiff(ydata,yhat)  
-end
+
 
 #leave-one-out LSCV for multivariate NW
 function BandwidthLSCVReg(xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel)
@@ -106,9 +92,12 @@ function BandwidthLSCVReg(xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::F
   h0=BandwidthNormalReference(reshape(xdata[:,1], n))
   
   function res(x::Vector{Float64})
-    leave_one_out(xdata,ydata,reg,kernel,x)  
+      ls=0.0
+      for i in 1:n
+          ls += (ydata[i]-reg(xdata[i,:],xdata[[1:(i-1),(i+1):end],:], ydata[[1:(i-1),(i+1):end]],kernel,x))^2
+      end
+      ls/n
   end
   optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1 / n
-
 end
 
