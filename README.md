@@ -5,7 +5,7 @@ The Julia package for nonparametric density estimate and regression.
 
 ## Functions
 This package provides the following functions:	
- - `KernelDensity(xeval, xdata, kernel::Function, h)` do kernel density estimate  
+ - `KernelDensity(xeval, xdata, kernel::KernelType=Gaussian, h)` do kernel density estimate  
 
  - `LP0(xeval, xdata, ydata::Vector, kernel::Function,h)` do local constant regression (or Nadaraya-Watson)  
 
@@ -15,7 +15,7 @@ This package provides the following functions:
 
  - `BandwidthNormalReference(xdata::Vector)` select bandwidth for density estimate by rule of thumb  
 
- - `BandwidthLSCV(xdata, kernel::Function)` select bandwidth for density estiamte by leave-one-out  
+ - `BandwidthLSCV(xdata, kernel::KernelType=Gaussian)` select bandwidth for density estiamte by leave-one-out  
 
  - `BandwidthLSCVReg(xdata, ydata::Vector, reg::Function, kernel::Function)` select bandwidth for regression using leave-one-out  
 
@@ -32,7 +32,7 @@ This package provides the following functions:
 In the above functions, 
  - `xeval` is the point(s) where the density or fitted value is calculated  
 
- - `xdata` is covariate(s), namely X, which can be one dimensional or multi-dimensional; should be of same dimension with `xeval` and `h`.   
+ - `xdata` is covariate(s), namely X, which can be one dimensional or multi-dimensional; should be of same dimension with `xeval` and `h`   
 
  - `ydata` is the response vector y; should have same length as the rows of `xdata`  
 
@@ -40,7 +40,9 @@ In the above functions,
 
  - `kernel` is the kernel function used. Only `GaussianKernel` is implemented; default to be `GaussianKernel`  
 
- - `h` is the bandwidth, can be a scalar or a vector, depending on whether `xdata` is univariate or multivariate; should have same length as the columns of `xeval` and `xdata`; default to be the value chosen by LSCV  
+ - `h` is the bandwidth, can be a scalar or a vector, depending on whether `xdata` is univariate or multivariate; should have same length as the columns of `xeval` and `xdata`; default to be the value chosen by LSCV
+
+  - `KernelType` is consisted of two functions, `Convolution` and `Density`. To add a new kernel, you need to specify these two functions. `Convolution(xdiff, h)` should be $1/h \int k(t)k(xdiff/h + t) dt$ Currently `Gaussian` and `Epanechnikov` are defined to be `KernelType`.  
 
 `xeval`, `xdata`, `ydata` and `h` should have element type Float64.  
 
@@ -48,10 +50,10 @@ In the above functions,
 
  - Kernel density estimate
         
-        x=rand(100,4)
-        y=x * ones(4) + x .^ 2 * ones(4)
-        xeval=rand(50,4)
-		den=KernelDensity(xeval, x)
+        x=rand(100,2)
+        y=x * ones(2) + x .^ 2 * ones(2)
+        xeval=rand(50,2)
+		    den=KernelDensity(xeval, x)
         
  - Local constant regression 
        
@@ -59,7 +61,7 @@ In the above functions,
 
  - Confidence Band
 
-         cb=BootstrapCB(100, xeval, x, y)
+        cb=BootstrapCB(100, xeval, x, y)
 
  - Goodness of fit test for some model (can be time consuming)
 
@@ -73,19 +75,19 @@ In the above functions,
  - Univariate kernel density and regression
 
         using Distributions
-        x=rand(Normal(), 100)
+        x=rand(Normal(), 500)
         xeval=linspace(minimum(x), maximum(x), 50)
         den=KernelDensity(xeval,x) 
               
         using Gadfly
-        plot(layer(x=x,y=y, Geom.point), layer(x=xeval,y=den, Geom.line))
+        draw(PNG("test.png",10cm,8cm), plot(x=xeval,y=den, Geom.line))
 
  - Univariate local constant regression and local linear regression
          
         y=2 .* x + rand(Normal(), 100)
         yfit0=LP0(xeval, x, y)
         yfit1=LP1(xeval, x, y)
-        plot(layer(x=x, y=y, Geom.point), layer(x=xeval, y=yfit1,Geom.line))
+        draw(PNG("test.png",10cm,8cm), plot(layer(x=x, y=y, Geom.point), layer(x=xeval, y=yfit1,Geom.line)))
 
 
 

@@ -17,11 +17,11 @@ function GaussianKernel(xeval::Vector{Float64}, xi::Vector{Float64}, h::Vector{F
   end
   p=length(xi)
 
-  exp(-wsumsqdiff(1./(h.^2), xeval, xi)) / (2*pi)^(p/2) / prod(h)
+  exp(-sumsq((xeval .- xi) ./ h)) / (2*pi)^(p/2) / prod(h)
 
 end
-GaussianKernel2(x::Float64) = GaussianKernel(x, 0.0, sqrt(2))
-GaussianKernel2(x::Vector{Float64}) = GaussianKernel(x, zeros(length(x)), sqrt(2).*ones(length(x)))
+GaussianKernel2(xdiff::Float64, h::Float64) = GaussianKernel(xdiff, 0.0, sqrt(2)*h)
+GaussianKernel2(xdiff::Vector{Float64}, h::Vector{Float64}) = GaussianKernel(xdiff, zeros(length(xdiff)), sqrt(2).* h)
 
 Gaussian=KernelType(GaussianKernel, GaussianKernel2)
 
@@ -50,24 +50,24 @@ function EKernel(xeval::Vector{Float64}, xi::Vector{Float64}, h::Vector{Float64}
     tmp
 end
 
-function EKernel2(x::Float64)
-    ax=abs(x)
+function EKernel2(xdiff::Float64, h::Float64)
+    ax=abs(xdiff / h)
     if ax > 2.0
         return 0.0
     end
 
-    (2 - ax)^3*(ax^2+6*ax+4) * 3 / 160
+    (2 - ax)^3*(ax^2+6*ax+4) * 3 / 160 / h
 
 end  
-function EKernel2(x::Vector{Float64})
-    ax=abs(x)
+function EKernel2(xdiff::Vector{Float64}, h::Vector{Float64})
+    ax=abs(xdiff ./ h)
     if any(ax .> 2.0)
         return 0.0
     end
     p=length(ax)
     tmp=1.0
     for i in 1:p
-        tmp *= EKernel2(ax[i])
+        tmp *= EKernel2(ax[i], h[i])
     end
     tmp
 end  

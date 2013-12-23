@@ -9,7 +9,7 @@ function Sind(xdata::Matrix{Float64}, ydata::Vector{Float64}, kernel::Function=G
     xb=xdata*x
     ls=0.0
     for i in 1:n
-      ls += (ydata[i] - LP0(xb[i], xb[[1:(i-1), (i+1):end]], ydata[[1:(i-1), (i+1):end]], kernel, [1.0]))^2
+      ls += (ydata[i] - LP0(xb[i], xb[[1:(i-1), (i+1):end]], ydata[[1:(i-1), (i+1):end]], kernel, 1.0))^2
     end
     ls / n
  
