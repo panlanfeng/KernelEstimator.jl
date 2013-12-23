@@ -1,7 +1,7 @@
 #univariate kernel density
 function KernelDensity(xeval::Float64, xdata::Vector{Float64}, kernel::KernelType=Gaussian, h::Float64=BandwidthLSCV(xdata, kernel))
   if h <= 0.0
-    return Inf
+    error("Bandwidth should be positive")
   end
   s0=0.0
   for i = 1:length(xdata)
@@ -19,7 +19,7 @@ function KernelDensity(xeval::Vector{Float64}, xdata::Matrix{Float64},
   kernel::KernelType=Gaussian, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
   
   if any(h .<= 0)
-    return Inf
+    error("Bandwidth should be positive")
   end
   (n, p)=size(xdata)
   if length(h) == 1 && p==1
@@ -46,7 +46,7 @@ function KernelDensity(xeval::Matrix{Float64}, xdata::Matrix{Float64},
   kernel::KernelType=Gaussian, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
   
   if any(h .<= 0)
-    return Inf
+    error("xeval should have same dimension as xdata")
   end
   (m, p)=size(xeval)
   if length(h) != p || size(xdata)[2] != p
