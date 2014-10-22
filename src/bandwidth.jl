@@ -17,8 +17,7 @@ function BandwidthLSCV(xdata::Vector{Float64}, kernel::KernelType=Gaussian)
   
     n=length(xdata)
     h0=BandwidthNormalReference(xdata)
-    function res(hv::Vector{Float64})  
-      h=hv[1]
+    function res(h::Float64)  
       tmp1=0.0
       tmp2=0.0
       for i in 1:n
@@ -34,7 +33,7 @@ function BandwidthLSCV(xdata::Vector{Float64}, kernel::KernelType=Gaussian)
 
       tmp1 / (n ^ 2) - tmp2 / (n * (n - 1)) * 2 + kernel.Convolution(0.0, h)/n
     end
-    return optimize(res, .1/n, 10*h0).minimum[1]  # add a lower order item to avoid 0 bandwidth
+    return Optim.optimize(res, .1/n, 10*h0).minimum  # add a lower order item to avoid 0 bandwidth
 end
 
 #Leave-one-out cross validation. Currently only work for GaussianKernel
