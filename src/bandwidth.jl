@@ -1,102 +1,132 @@
 #bandwidth selector
-function BandwidthNormalReference(xdata::Vector{Float64})
-  1.06 * min((quantile(xdata, .75) - quantile(xdata, .25)) / 1.34, std(xdata)) * length(xdata) ^ (-0.2)
+function bwnormal(xdata::RealVector)
+    1.06 * min((quantile(xdata, .75) - quantile(xdata, .25)) / 1.34, std(xdata)) * length(xdata) ^ (-0.2)
 end
 
 
-#Leave-one-out cross validation. Currently only work for GaussianKernel
-#\sum_{i,j}K'((x_i - x_j)/h) /(n^2*h) + 2K(0)/(nh)
-#where K' = K^{(2)} - 2K
-#When Kernel is normal it is 
-# \sum_{i,j} \int k((x-x_i)/h)k((x-x_j)/h)/h^2 /n^2  dx = \sum{i,j} k((x_i - x_j)/(sqrt(2)* h))/(sqrt(2)* h) / n^2
-#  - 2 * \sum_{i \neq j} k((x_i - x_j) / h)/(n*(n-1)h)
-#so it's  \sum{i \neq j} k((x_i - x_j)/(sqrt(2)* h))/(sqrt(2)* h) / n^2 - 2 \sum_{i \neq j} k((x_i - x_j) / h)/(n*(n-1)h) 
-#+ k(0)/(sqrt(2)* h) / n
-# = \sum{i \neq j} k_{sqrt(2)*h}(x_i - x_j)/n^2 - 2 \sum_{i \neq j} k_h{x_i - x_j} / (n*(n-1)) + k_{sqrt(2)*h}(0)/n
-function BandwidthLSCV(xdata::Vector{Float64}, kernel::KernelType=Gaussian)
-  
+# J(h)=∑ᵢⱼK'((xᵢ - xⱼ)/h) /(n²h) + 2K(0)/(nh) =
+# where K'(u) = invsqrt2pi(exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u))
+#J(h) = invsqrt2pi/(n²h) ∑ᵢⱼ (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + 2 * invsqrt2pi /nh
+#J(h) = invsqrt2pi/(n²h) ∑{i\ne j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2pi/sqrt(2)nh
+#For normal kernel
+function Jh{T<:FloatingPoint}(xdata::Vector{T}, h::T)
     n=length(xdata)
-    h0=BandwidthNormalReference(xdata)
-    function res(h::Float64)  
-      tmp1=0.0
-      tmp2=0.0
-      for i in 1:n
-        for j in 1:n
-          if j == i
-            continue
-          end
-          xdiff=xdata[i] - xdata[j]
-          tmp1 += kernel.Convolution(xdiff, h)
-          tmp2 += kernel.Density(xdiff,0.0,h)
+    tmp = 0.0
+    for i in 1:(n-1)
+        for j in (i+1):n
+            u = (xdata[i] - xdata[j])/h
+            u = exp(-0.25*u*u)
+            tmp += u/sqrt(2) - 2*u*u
         end
-      end
-
-      tmp1 / (n ^ 2) - tmp2 / (n * (n - 1)) * 2 + kernel.Convolution(0.0, h)/n
     end
-    return Optim.optimize(res, .1/n, 10*h0).minimum  # add a lower order item to avoid 0 bandwidth
+    2*tmp / (n*n*h) + 1/(sqrt(2)*n*h)
+end
+Jh(xdata::RealVector, h::Real)=Jh(float(xdata), float(h))
+
+
+#Leave-one-out cross validation. Currently only work for Gaussian Kernel
+function bwcv(xdata::RealVector, kernel::Functor{3})
+
+    n=length(xdata)
+    h0=bwnormal(xdata)
+
+    return Optim.optimize(h -> Jh(xdata, h), .1/n, 10*h0).minimum  # add a lower order item to avoid 0 bandwidth
 end
 
-#Leave-one-out cross validation. Currently only work for GaussianKernel
-#\sum_{i,j}K'((x_i - x_j)/h) /(n^2*h) + 2K(0)/(nh)
-#where K' = K^{(2)} - 2K
-#When Kernel is normal it is 
-function BandwidthLSCV(xdata::Matrix{Float64}, kernel::KernelType=Gaussian) 
-    (n, p)=size(xdata)  
-    h0=BandwidthNormalReference(reshape(xdata[:,1], n))  
-    function res(h::Vector{Float64})  
-      tmp1=0.0
-      tmp2=0.0
-      for i in 1:n
-        for j in 1:n
-          if j == i
-            continue
-          end
-          #tmp += kernel(xdata[i], xdata[j], sqrt(2)*h) - 2*kernel(xdata[i], xdata[j], h)
-          #xdiff = ((xdata[i,:] .- xdata[j,:]) ./ h)^2
-          #tmp += (2^(-1/2)*exp(-xdiff/4) - 2*exp(-xdiff/2))
-          xdiff=[(xdata[i,k] - xdata[j,k])::Float64 for k in 1:p]
-          tmp1 += kernel.Convolution(xdiff, h)
-          tmp2 += kernel.Density(xdiff,zeros(p),h)
-        end
-      end
-      tmp1 / (n ^ 2) - tmp2 / (n * (n - 1)) * 2 + kernel.Convolution(zeros(p), h)/n
 
+#multivariate
+# function BandwidthLSCV(xdata::Matrix{Float64}, kernel::KernelType=Gaussian)
+#     (n, p)=size(xdata)
+#     h0=BandwidthNormalReference(reshape(xdata[:,1], n))
+#     function res(h::Vector{Float64})
+#       tmp1=0.0
+#       tmp2=0.0
+#       for i in 1:n
+#         for j in 1:n
+#           if j == i
+#             continue
+#           end
+#           #tmp += kernel(xdata[i], xdata[j], sqrt(2)*h) - 2*kernel(xdata[i], xdata[j], h)
+#           #xdiff = ((xdata[i,:] .- xdata[j,:]) ./ h)^2
+#           #tmp += (2^(-1/2)*exp(-xdiff/4) - 2*exp(-xdiff/2))
+#           xdiff=[(xdata[i,k] - xdata[j,k])::Float64 for k in 1:p]
+#           tmp1 += kernel.Convolution(xdiff, h)
+#           tmp2 += kernel.Density(xdiff,zeros(p),h)
+#         end
+#       end
+#       tmp1 / (n ^ 2) - tmp2 / (n * (n - 1)) * 2 + kernel.Convolution(zeros(p), h)/n
+
+#     end
+#    return optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1/n
+# end
+
+#leave-one-out LSCV.
+function cvlp0(xdata::RealVector, ydata::RealVector, h::Real, kernel::Functor{3})
+    n = length(ydata)
+    tmp = 0.0
+    w = ones(n)
+    for i in 1:n
+        map!(kernel, w, xdata, xdata[i], h)
+        divide!(w, sum(w))
+        tmp += abs2((wsum(w, ydata) - ydata[i])/(1-w[i]))
     end
-   return optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1/n
+    tmp/n
 end
 
-#leave-one-out LSCV. Using 
-function BandwidthLSCVReg(xdata::Vector{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel)
+function bwlp0(xdata::RealVector, ydata::RealVector, kernel::Functor{3}=Gkernel())
 
   n=length(xdata)
-  h0= BandwidthNormalReference(xdata)
-  function res(h::Vector{Float64})
-    ls=0.0
+  length(ydata)==n || error("length(ydata) != length(xdata)")
+  h0= bwnormal(xdata)
+
+  Optim.optimize(h->cvlp0(xdata, ydata, h, kernel), .1/n, 10*h0).minimum
+end
+
+#see reference:Smoothing Parameter Selection in Nonparametric Regression Using an Improved Akaike Information Criterion
+# Clifford M. Hurvich, Jeffrey S. Simonoff and Chih-Ling Tsai
+# Journal of the Royal Statistical Society. Series B (Statistical Methodology), Vol. 60, No. 2 (1998), pp. 271-293
+#http://www.jstor.org/stable/2985940
+function AIClp1(xdata::RealVector, ydata::RealVector, h::Real, kernel::Functor{3})
+    n = length(ydata)
+    tmp = 0.0
+    traceH = 0.0
+    w=ones(n)
     for i in 1:n
-      ls += (ydata[i]-reg(xdata[i], xdata[[1:(i-1), (i+1):end]],ydata[[1:(i-1), (i+1):end]], kernel, h[1]))^2
+          map!(kernel, w, xdata, xdata[i], h)
+          s0 = sum(w)
+          s1 = s0*xdata[i] - wsum(w, xdata)
+          s2 = wsumsqdiff(w, xdata, xdata[i])
+          sy0 = wsum(w, ydata)
+          sy1 = NumericExtensions.wsum(w, YXdiff(), xdata, xdata[i], ydata)
+          tmp+=abs2((s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1) - ydata[i])
+          traceH += s0*w[i]/(s2 * s0 - s1 * s1)
     end
-    ls / n
-  end
-  optimize(res, [h0], iterations=100).minimum[1] + .1/n
+    tmp/n  + 2*(traceH+1)/(n-traceH-2)
 end
 
+function bwlp1(xdata::RealVector, ydata::RealVector, kernel::Functor{3}=Gkernel())
+    n=length(xdata)
+    length(ydata)==n || error("length(ydata) != length(xdata)")
+    h0= bwnormal(xdata)
 
-#leave-one-out LSCV for multivariate NW
-function BandwidthLSCVReg(xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel)
-
-  (n,p)=size(xdata)  
-  h0=BandwidthNormalReference(reshape(xdata[:,1], n))
-  
-  function res(h::Vector{Float64})
-      ls=0.0
-      for i in 1:n
-          # xdata[i,:] is actually a vector, so the returning value is still a vector
-          ls += abs2(ydata[i] - reg(xdata[i,:],xdata[[1:(i-1),(i+1):end],:], ydata[[1:(i-1),(i+1):end]],kernel,h)[1])
-
-      end
-      ls/n
-  end
-  optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1 / n
-
+    Optim.optimize(h->AIClp1(xdata, ydata, h, kernel), .1/n, 10*h0).minimum
 end
+# #leave-one-out LSCV for multivariate NW
+# function BandwidthLSCVReg(xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel)
+
+#   (n,p)=size(xdata)
+#   h0=BandwidthNormalReference(reshape(xdata[:,1], n))
+
+#   function res(h::Vector{Float64})
+#       ls=0.0
+#       for i in 1:n
+#           # xdata[i,:] is actually a vector, so the returning value is still a vector
+#           ls += abs2(ydata[i] - reg(xdata[i,:],xdata[[1:(i-1),(i+1):end],:], ydata[[1:(i-1),(i+1):end]],kernel,h)[1])
+
+#       end
+#       ls/n
+#   end
+#   optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1 / n
+
+# end
 

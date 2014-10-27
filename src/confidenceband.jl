@@ -1,13 +1,12 @@
 #Bootstrap confidence band for univariate nonparametric regression
-function BootstrapCB(B::Int64, xeval::Vector{Float64}, 
-  xdata::Vector{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel, h::Float64=BandwidthLSCVReg(xdata,ydata,reg,kernel))
-  
+function BootstrapCB(B::Int64, xeval::RealVector, xdata::RealVector, ydata::RealVector, reg::Function, h::Real; kernel::Functor{3}=Gkernel())
+
   n=length(xdata)
   y_matrix=zeros(B, length(xeval))
   cb=zeros(2, length(xeval))
-  
-  yhat=reg(xdata, xdata, ydata, kernel, h)
-  mhat=reg(xdata, xdata, ydata, kernel, h)
+
+  yhat=reg(xdata, xdata, ydata, h=h, kernel=kernel)
+  mhat=copy(yhat)  #reg(xdata, xdata, ydata, kernel, h)
   e = ydata .- yhat
   coef=[-1,0,2]
 
@@ -15,7 +14,7 @@ function BootstrapCB(B::Int64, xeval::Vector{Float64},
     boot_coef=coef[rand(Categorical([1/3, 1/2, 1/6]), n)]
     boot_e=boot_coef .* e
     boot_y=mhat .+ boot_e
-    y_matrix[b, :]=reg(xeval, xdata, boot_y,kernel, h)
+    y_matrix[b, :]=reg(xeval, xdata, boot_y, h=h, kernel=kernel)
   end
   for i in 1:length(xeval)
     cb[:, i]=quantile(y_matrix[:, i], [.975, .025])
@@ -23,34 +22,34 @@ function BootstrapCB(B::Int64, xeval::Vector{Float64},
   cb
 end
 
-#Bootstrap confidence band for multivariate nonparametric regression
-function BootstrapCB(B::Int64, xeval::Matrix{Float64}, 
-  xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCVReg(xdata,ydata,reg,kernel))
-  
-  (n, p)=size(xdata)
-  (m,p1 )= size(xeval)
-  if p != p1
-    error("xeval should have same dimension as xdata")
-  end
-  
-  y_matrix=zeros(B, m)
-  cb=zeros(2, m)
-  
-  yhat=reg(xdata, xdata, ydata, kernel, h)
-  mhat=reg(xdata, xdata, ydata, kernel, h)
-  e = ydata .- yhat
-  coef=[-1,0,2]
+# #Bootstrap confidence band for multivariate nonparametric regression
+# function BootstrapCB(B::Int64, xeval::Matrix{Float64},
+#   xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCVReg(xdata,ydata,reg,kernel))
 
-  for b in 1:B
-#     print(b, "\t")
-    boot_coef=coef[rand(Categorical([1/3, 1/2, 1/6]), n)]
-    boot_e=boot_coef .* e
-    boot_y=mhat .+ boot_e
-    y_matrix[b, :]=reg(xeval, xdata, boot_y,kernel, h)
-  end
-  for i in 1:m
-    cb[:, i]=quantile(y_matrix[:, i], [.975, .025])
-  end
-  cb
-end
+#   (n, p)=size(xdata)
+#   (m,p1 )= size(xeval)
+#   if p != p1
+#     error("xeval should have same dimension as xdata")
+#   end
+
+#   y_matrix=zeros(B, m)
+#   cb=zeros(2, m)
+
+#   yhat=reg(xdata, xdata, ydata, kernel, h)
+#   mhat=reg(xdata, xdata, ydata, kernel, h)
+#   e = ydata .- yhat
+#   coef=[-1,0,2]
+
+#   for b in 1:B
+# #     print(b, "\t")
+#     boot_coef=coef[rand(Categorical([1/3, 1/2, 1/6]), n)]
+#     boot_e=boot_coef .* e
+#     boot_y=mhat .+ boot_e
+#     y_matrix[b, :]=reg(xeval, xdata, boot_y,kernel, h)
+#   end
+#   for i in 1:m
+#     cb[:, i]=quantile(y_matrix[:, i], [.975, .025])
+#   end
+#   cb
+# end
 
