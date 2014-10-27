@@ -1,14 +1,14 @@
-require("Distributions")
-require("Cubature")
-require("Optim")
-require("NumericExtensions")
-require("StatsBase")
+# require("Distributions")
+# require("Cubature")
+# require("Optim")
+# require("NumericExtensions")
+# require("StatsBase")
 
 
 module Nonparametric
 
 using Distributions
-using Cubature
+# using Cubature
 using Optim
 using NumericExtensions
 using StatsBase

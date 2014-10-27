@@ -1,102 +1,76 @@
 # Nonparametric
-The Julia package for nonparametric density estimate and regression.
+The Julia package for nonparametric density estimate and regression. Currently includes univariate kernel density estimate, local constant regression (Nadaraya-watson estimator), local linear regression. Bootstrap confidence band is also provide for the regression methods. The previous support for multivariate density estimation and regression is temporarily removed because they are not efficient enough.
 
 [![Build Status](https://travis-ci.org/panlanfeng/Nonparametric.jl.png)](https://travis-ci.org/panlanfeng/Nonparametric.jl)
 
 ## Functions
-This package provides the following functions:	
- - `KernelDensity(xeval, xdata, kernel::KernelType=Gaussian, h)` do kernel density estimate  
+This package provides the following functions:
+ - `kde(xeval, xdata, kernel::Functor{3}=Gkernel(), h=bwcv(xdata,kernel))` do kernel density estimate
 
- - `LP0(xeval, xdata, ydata::Vector, kernel::Function,h)` do local constant regression (or Nadaraya-Watson)  
+ - `LP0(xeval, xdata, ydata::Vector, kernel::Functor{3}=Gkernel(),h=bwlp0(xdata,ydata,kernel))` do local constant regression (or Nadaraya-Watson)
 
- - `LP1(xeval, xdata, ydata::Vector, kernel,h)` do local linear regression  
+ - `LP1(xeval, xdata, ydata::Vector, kernel::Functor{3}=Gkernel(),h=bwlp1(xdata,ydata,kernel))` do local linear regression
 
- - `Sind(xdata::Matrix, ydata::Vector, kernel::Function)` fit single index model (which is semiparametric model actually)  
+ - `bwnormal(xdata::Vector)` select bandwidth for density estimate by rule of thumb
 
- - `BandwidthNormalReference(xdata::Vector)` select bandwidth for density estimate by rule of thumb  
+ - `bwcv(xdata, kernel)` select bandwidth for density estiamte by leave-one-out. Only support for Gaussian Kernel
 
- - `BandwidthLSCV(xdata, kernel::KernelType=Gaussian)` select bandwidth for density estiamte by leave-one-out  
+ - `bwlp0(xdata, ydata::Vector, kernel)` select bandwidth for local constant regression using leave-one-out
 
- - `BandwidthLSCVReg(xdata, ydata::Vector, reg::Function, kernel::Function)` select bandwidth for regression using leave-one-out  
+ - `bwlp1(xdata, ydata::Vector, kernel)` select bandwidth for local linear regression using corrected AIC. See reference.
 
- - `BootstrapCB(B::Int64,xeval,xdata,ydata,testmodel::Function,reg,kernel,h)` compute 95% wild bootstrap confidence band at `xeval` for `LP0`  
+ - `BootstrapCB(B::Int64,xeval,xdata,ydata,reg,kernel,h)` compute 95% wild bootstrap confidence band at `xeval` for `LP0` and `LP1`
 
- - `BootstrapGoodness(B::Int64, xdata, ydata, testmodel::Function, reg, kernel, h)`: do the goodness of fit test for `testmodel` based on wild bootstrap, where `testmodel` should be a function taking parameters like `testmodel(xdata, ydata::Vector)` and returning predicted values at `xdata`. For example, 
-  
-        function SemiPredict(xdata::Matrix{Float64}, ydata::Vector{Float64})
-          xb=xdata*Sind(xdata,ydata,GaussianKernel)
-          LP0(xb,xb,ydata,GaussianKernel,1.0)
-        end
-	  
 
-In the above functions, 
- - `xeval` is the point(s) where the density or fitted value is calculated  
 
- - `xdata` is covariate(s), namely X, which can be one dimensional or multi-dimensional; should be of same dimension with `xeval` and `h`   
+In the above functions,
+ - `xeval` is the point(s) where the density or fitted value is calculated
 
- - `ydata` is the response vector y; should have same length as the rows of `xdata`  
+ - `xdata` is covariate(s), namely X
 
- - `reg` is the regression function, can be `LP0` or `LP1`. `LP1` can only be used for univariate regression currently; default to be `LP0`  
+ - `ydata` is the response vector y; should have same length as the rows of `xdata`
 
- - `kernel` is the kernel function used. Only `GaussianKernel` is implemented; default to be `GaussianKernel`  
+ - `reg` is the regression function, can be `LP0` or `LP1`.
 
- - `h` is the bandwidth, can be a scalar or a vector, depending on whether `xdata` is univariate or multivariate; should have same length as the columns of `xeval` and `xdata`; default to be the value chosen by LSCV
+ - `kernel` is the kernel used, default to be `Gkernel()`; should be of type `Functor{3}` provided in package `NumericExtensions`
 
-  - `KernelType` is consisted of two functions, `Convolution` and `Density`. To add a new kernel, you need to specify these two functions. `Convolution(xdiff, h)` should be $1/h \int k(t)k(xdiff/h + t) dt$ Currently `Gaussian` and `Epanechnikov` are defined to be `KernelType`.  
+ - `h` is the bandwidth, can be a real scalar
 
-`xeval`, `xdata`, `ydata` and `h` should have element type Float64.  
 
 ##Demos
 
  - Kernel density estimate
-        
-        x=rand(100,2)
-        y=x * ones(2) + x .^ 2 * ones(2)
-        xeval=rand(50,2)
-		    den=KernelDensity(xeval, x)
-        
- - Local constant regression 
-       
-        yfit0=LP0(xeval,x,y)
+
+        using Distributions
+        x=rand(Normal(), 100)
+        xeval=linspace(minimum(x), maximum(x), 50)
+        den=kde(xeval,x)
+
+ - Local constant regression
+
+        y=2 .* x.^2 + rand(Normal(), 100)
+        yfit0=LP0(xeval, x, y)
+        yfit1=LP1(xeval, x, y)
 
  - Confidence Band
 
-        cb=BootstrapCB(100, xeval, x, y)
+        cb=BootstrapCB(100, xeval, x, y, LP1, bwlp1(x, y))
 
- - Goodness of fit test for some model (can be time consuming)
-
-        function SemiPredict(xdata::Matrix{Float64}, ydata::Vector{Float64})
-          xb=xdata*Sind(xdata,ydata,GaussianKernel)
-          LP0(xb,xb,ydata,GaussianKernel,1.0)
-        end
-
-        BootstrapGoodness(10, x, y, SemiPredict) 
-
- - Univariate kernel density and regression
-
-        using Distributions
-        x=rand(Normal(), 500)
-        xeval=linspace(minimum(x), maximum(x), 50)
-        den=KernelDensity(xeval,x) 
-              
         using Gadfly
-        draw(PNG("test.png",10cm,8cm), plot(x=xeval,y=den, Geom.line))
+        plot(layer(x=x, y=y, Geom.point), layer(x=xeval, y=yfit1, Geom.line, Theme(default_color=color("black"))), layer(x=xeval, y=cb[1,:], Geom.line, Theme(default_color=color("red"))), layer(x=xeval, y=cb[2,:], Geom.line, Theme(default_color=color("red"))))
 
- - Univariate local constant regression and local linear regression
-         
-        y=2 .* x + rand(Normal(), 100)
-        yfit0=LP0(xeval, x, y)
-        yfit1=LP1(xeval, x, y)
-        draw(PNG("test.png",10cm,8cm), plot(layer(x=x, y=y, Geom.point), layer(x=xeval, y=yfit1,Geom.line)))
 
 
 
 ##Reference
- - Lecture notes from Dr. Song Xi Chen  
 
- - W. Hardle and J. S. Marron (1991). Bootstrap Simultaneous Error Bars for Nonparametric Regression. _The Annals of Statistics_. Vol. 19, No. 2 (Jun., 1991), pp. 778-796  
+ - Lecture notes from Dr. Song Xi Chen
 
- - W.Hardle and E. Mammen (1993). Comparing Nonparametric Versus Parametric Regression Fits. _The Annals of Statistics_. Vol. 21, No. 4 (Dec., 1993), pp. 1926-1947  
+ - W. Hardle and J. S. Marron (1991). Bootstrap Simultaneous Error Bars for Nonparametric Regression. _The Annals of Statistics_. Vol. 19, No. 2 (Jun., 1991), pp. 778-796
+
+ - W.Hardle and E. Mammen (1993). Comparing Nonparametric Versus Parametric Regression Fits. _The Annals of Statistics_. Vol. 21, No. 4 (Dec., 1993), pp. 1926-1947
+
+ -  Clifford M. Hurvich, Jeffrey S. Simonoff and Chih-Ling Tsai (1998). Smoothing Parameter Selection in Nonparametric Regression Using an Improved Akaike Information Criterion. _Journal of the Royal Statistical Society. Series B (Statistical Methodology)_, Vol. 60, No. 2 (1998), pp. 271-293
 
 
 
