@@ -1,12 +1,12 @@
 #univariate nadaraya-watson estimate
-function LP0{T<:FloatingPoint}(xeval::T, xdata::Vector{T}, ydata::Vector{T}; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel))
+function LP0(xeval::Real, xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel))
     n=length(xdata)
     length(ydata) == n || error("length of ydata not the same with xdata")
     w=ones(n)
     map!(kernel,w, xdata, xeval, h)
     wsum(w, ydata)/sum(w)
 end
-LP0(xeval::Real, xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel)) = LP0(float(xeval), float(xdata), float(ydata), h=float(h), kernel=kernel)
+# LP0(xeval::Real, xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel)) = LP0(float(xeval), float(xdata), float(ydata), h=float(h), kernel=kernel)
 LP0(xeval::RealVector, xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel))=Float64[LP0(xeval[i], xdata,ydata,h=h, kernel=kernel) for i=1:length(xeval)]
 LP0(xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel))=LP0(xdata, xdata, ydata, kernel=kernel,h=h)
 
@@ -34,6 +34,9 @@ function LP1(xeval::Real, xdata::RealVector, ydata::RealVector; kernel::Functor{
 end
 LP1(xeval::RealVector, xdata::RealVector, ydata::RealVector;kernel::Functor{3}=Gkernel(), h::Real=bwlp1(xdata, ydata, kernel))=Float64[LP1(xeval[i], xdata,ydata,h=h, kernel=kernel) for i=1:length(xeval)]
 LP1(xdata::RealVector, ydata::RealVector;kernel::Functor{3}=Gkernel(), h::Real=bwlp1(xdata, ydata, kernel))=LP1(xdata, xdata,ydata,kernel=kernel, h=h)
+
+
+
 # #multi-variate nadaraya-watson
 # function LP0(xeval::Vector{Float64}, xdata::Matrix{Float64}, ydata::Vector{Float64}, kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCVReg(xdata,ydata,LP0,kernel))
 

@@ -1,19 +1,20 @@
 # Nonparametric
-The Julia package for nonparametric density estimate and regression. Currently includes univariate kernel density estimate, local constant regression (Nadaraya-watson estimator), local linear regression. Bootstrap confidence band is also provide for the regression methods. The previous support for multivariate density estimation and regression is temporarily removed because they are not efficient enough.
+The Julia package for nonparametric density estimate and regression. Currently includes univariate kernel density estimate, local constant regression (Nadaraya-watson estimator), local linear regression. Bootstrap confidence band is also provided for the regression estimation. The previous support for multivariate density estimation and regression are temporarily removed because of low efficiency.
 
 [![Build Status](https://travis-ci.org/panlanfeng/Nonparametric.jl.png)](https://travis-ci.org/panlanfeng/Nonparametric.jl)
 
 ## Functions
 This package provides the following functions:
+
  - `kde(xeval, xdata, kernel::Functor{3}=Gkernel(), h=bwcv(xdata,kernel))` do kernel density estimate
 
- - `LP0(xeval, xdata, ydata::Vector, kernel::Functor{3}=Gkernel(),h=bwlp0(xdata,ydata,kernel))` do local constant regression (or Nadaraya-Watson)
+ - `LP0(xeval, xdata, ydata::Vector; kernel::Functor{3}=Gkernel(),h=bwlp0(xdata,ydata,kernel))` do local constant regression (or Nadaraya-Watson)
 
- - `LP1(xeval, xdata, ydata::Vector, kernel::Functor{3}=Gkernel(),h=bwlp1(xdata,ydata,kernel))` do local linear regression
+ - `LP1(xeval, xdata, ydata::Vector; kernel::Functor{3}=Gkernel(),h=bwlp1(xdata,ydata,kernel))` do local linear regression
 
  - `bwnormal(xdata::Vector)` select bandwidth for density estimate by rule of thumb
 
- - `bwcv(xdata, kernel)` select bandwidth for density estiamte by leave-one-out. Only support for Gaussian Kernel
+ - `bwcv(xdata, kernel)` select bandwidth for density estiamte by leave-one-out. Currently only support for Gaussian Kernel
 
  - `bwlp0(xdata, ydata::Vector, kernel)` select bandwidth for local constant regression using leave-one-out
 
@@ -24,17 +25,18 @@ This package provides the following functions:
 
 
 In the above functions,
+
  - `xeval` is the point(s) where the density or fitted value is calculated
 
- - `xdata` is covariate(s), namely X
+ - `xdata` is the input X
 
- - `ydata` is the response vector y; should have same length as the rows of `xdata`
+ - `ydata` is the response vector y; should have same length with `xdata`
 
- - `reg` is the regression function, can be `LP0` or `LP1`.
+ - `reg` is the regression function `LP0` or `LP1`
 
- - `kernel` is the kernel used, default to be `Gkernel()`; should be of type `Functor{3}` provided in package `NumericExtensions`
+ - `kernel` defaults to be `Gkernel()`; should be of type `Functor{3}` provided in package `NumericExtensions`
 
- - `h` is the bandwidth, can be a real scalar
+ - `h` is the bandwidth, should be a real scalar
 
 
 ##Demos

@@ -25,6 +25,7 @@ Jh(xdata::RealVector, h::Real)=Jh(float(xdata), float(h))
 
 
 #Leave-one-out cross validation. Currently only work for Gaussian Kernel
+#May fail to work if there are multiple equial x_i
 function bwcv(xdata::RealVector, kernel::Functor{3})
 
     n=length(xdata)
@@ -60,7 +61,7 @@ end
 #    return optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1/n
 # end
 
-#leave-one-out LSCV.
+#leave-one-out LSCV. 1/n \sum((yi - yihat)/(1-wi))
 function cvlp0(xdata::RealVector, ydata::RealVector, h::Real, kernel::Functor{3})
     n = length(ydata)
     tmp = 0.0
