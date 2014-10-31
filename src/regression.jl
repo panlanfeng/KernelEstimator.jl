@@ -10,6 +10,36 @@ end
 LP0(xeval::RealVector, xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel))=Float64[LP0(xeval[i], xdata,ydata,h=h, kernel=kernel) for i=1:length(xeval)]
 LP0(xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel))=LP0(xdata, xdata, ydata, kernel=kernel,h=h)
 
+function npr(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, reg::Function=LP1, lb::Real=-Inf, ub::Real=Inf, kernel::Functor{3}=Gkernel(), h::Real=-Inf)
+    if (lb == -Inf) & (ub == Inf)
+        if h==-Inf
+            return reg(xeval, xdata, ydata, kernel=kernel, h=bwreg(xdata,ydata, reg, kernel))
+        else
+            return reg(xeval, xdata, ydata, kernel=kernel, h=h)
+        end
+    elseif (lb > -Inf) & (ub < Inf)
+        if h == -Inf
+            return reg((xeval .- lb) ./ (ub - lb), (xdata.-lb)./(ub - lb), ydata, kernel=Betakernel(), h=bwreg(xdata,ydata,reg, kernel))
+        else
+            return reg((xeval .- lb) ./ (ub - lb), (xdata.-lb)./(ub - lb), ydata, kernel=Betakernel(), h=h)
+        end
+    elseif (lb > -Inf) & (ub == Inf)
+        if h == -Inf
+            return reg(xeval .- lb, xdata .- lb, ydata, kernel=Gammakernel(), h=bwreg(xdata, ydata, reg, kernel))
+        else
+            return reg(xeval .- lb, xdata .- lb, ydata, kernel=Gammakernel(), h=h)
+        end
+    else (lb == -Inf) & (ub < Inf)
+        if h == -Inf
+            return reg(ub .- xeval, ub .- xdata, ydata, kernel=GammaKernel(), h=bwreg(xdata, ydata, reg, kernel))
+        else
+            return reg(ub .- xeval, ub .- xdata, ydata, kernel=GammaKernel(), h=h)
+        end
+    end
+end
+
+
+
 yxdiff{T<:FloatingPoint}(xi::T, xeval::T, y::T)=y*(xeval - xi)
 yxdiff{T<:Real}(xi::T, xeval::T, y::T)=yxdiff(float(xi), float(xeval), float(y))
 yxdiff(xi::Real, xeval::Real, y::Real)=yxdiff(promote(xi, xeval, y)...)

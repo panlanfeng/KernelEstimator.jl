@@ -24,6 +24,48 @@ ekernel(xi::Real, xeval::Real, h::Real)=ekernel(promote(xi, xeval, h)...)
 type Ekernel <: Functor{3} end
 NumericExtensions.evaluate(::Ekernel, xi, xeval, h) = ekernel(xi, xeval, h)
 
+# data need to be transformed on [0, ∞]
+# K_{ρₕ(x), h}(xᵢ) = (t/h)^(ρₕ(x)-1) exp(-t/h)/gamma(ρ)/h
+function gammakernel{T<:FloatingPoint}(xi::T, xeval::T, h::T)
+    rhoh = xeval/h
+    if xeval < 0
+        return(0)
+    elseif xeval < 2*h
+        rhoh = 0.25 * rhoh * rhoh + 1
+    else
+        nothing
+    end
+    uh = xi/h
+    uh^(rhoh-1) * exp(-uh) / h / gamma(rhoh)
+end
+gammakernel{T<:Real}(xi::T,xeval::T, h::T) = gammakernel(float(xi),float(xeval), float(h))
+gammakernel(xi::Real, xeval::Real, h::Real)=gammakernel(promote(xi, xeval, h)...)
+type Gammakernel <: Functor{3} end
+NumericExtensions.evaluate(::Gammakernel, xi, xeval, h) = gammakernel(xi, xeval, h)
+
+
+rhoxb{T<:FloatingPoint}(x::T, b::T) = 2*b*b + 2.5 - sqrt(4*b^4 + 6*b*b+2.25 - x*x - x/b)
+rhoxb{T<:Real}(x::T, b::T) = rhoxb(float(x), float(b))
+rhoxb(x::Real, b::Real) = rhoxb(promote(x, b)...)
+#data need be transformed on [0, 1]
+function betakernel{T<:FloatingPoint}(xi::T, xeval::T, h::T)
+    a = xeval / h
+    b = (1 - xeval) / h
+    if (xeval < 0) | (xeval > 1)
+        return(0)
+    elseif xeval < 2h
+        a =  rhoxb(xeval, h)
+    elseif xeval>1-2*h
+        b = rhoxb(1-xeval, h)
+    else
+        nothing
+    end
+    xi ^ (a-1) * (1 - xi) ^ (b-1) / beta(a, b)
+end
+betakernel{T<:Real}(xi::T,xeval::T, h::T) = betakernel(float(xi),float(xeval), float(h))
+betakernel(xi::Real, xeval::Real, h::Real)=betakernel(promote(xi, xeval, h)...)
+type Betakernel <: Functor{3} end
+NumericExtensions.evaluate(::Betakernel, xi, xeval, h) = betakernel(xi, xeval, h)
 
 # #MultiVariate Normal Kernel
 # function GaussianKernel(xeval::Vector{Float64}, xi::Vector{Float64}, h::Vector{Float64})

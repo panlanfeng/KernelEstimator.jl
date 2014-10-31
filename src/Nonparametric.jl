@@ -17,9 +17,9 @@ import StatsBase: RealVector, RealMatrix
 
 
 
-export  kde, Gkernel, Ekernel,
-        LP0, LP1,
-        bwnormal, bwcv, bwlp0, bwlp1,
+export  kde, kerneldensity, Gkernel, Ekernel,Gammakernel, Betakernel,
+        LP0, LP1, npr,
+        bwnormal, bwcv, bwlp0, bwlp1,bwreg, bwkd,
 #         Sind,
         BootstrapCB
 #         BootstrapGoodness

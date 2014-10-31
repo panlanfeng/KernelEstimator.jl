@@ -1,13 +1,13 @@
 #bandwidth selector
 function bwnormal(xdata::RealVector)
-    1.06 * min((quantile(xdata, .75) - quantile(xdata, .25)) / 1.34, std(xdata)) * length(xdata) ^ (-0.2)
+    0.9 * min((quantile(xdata, .75) - quantile(xdata, .25)) / 1.34, std(xdata)) * length(xdata) ^ (-0.2)
 end
 
 
 # J(h)=∑ᵢⱼK'((xᵢ - xⱼ)/h) /(n²h) + 2K(0)/(nh) =
 # where K'(u) = invsqrt2pi(exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u))
 #J(h) = invsqrt2pi/(n²h) ∑ᵢⱼ (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + 2 * invsqrt2pi /nh
-#J(h) = invsqrt2pi/(n²h) ∑{i\ne j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2pi/sqrt(2)nh
+#J(h) = 2*invsqrt2pi/(n²h) ∑{i<j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2pi/sqrt(2)nh
 #For normal kernel
 function Jh{T<:FloatingPoint}(xdata::Vector{T}, h::T)
     n=length(xdata)
@@ -26,12 +26,22 @@ Jh(xdata::RealVector, h::Real)=Jh(float(xdata), float(h))
 
 #Leave-one-out cross validation. Currently only work for Gaussian Kernel
 #May fail to work if there are multiple equial x_i
+# Silverman suggest search interval be (0.25, 1.5)n^(-0.2)σ
 function bwcv(xdata::RealVector, kernel::Functor{3})
 
     n=length(xdata)
     h0=bwnormal(xdata)
+#     m1, m2 = extrema(xdata)
+    return Optim.optimize(h -> Jh(xdata, h), 0.25*h0, 10*h0).minimum  # add a lower order item to avoid 0 bandwidth
+end
 
-    return Optim.optimize(h -> Jh(xdata, h), .1/n, 10*h0).minimum  # add a lower order item to avoid 0 bandwidth
+#to be implemented
+function bwkd(xdata::RealVector, kernel::Functor{3})
+
+    n=length(xdata)
+    h0=bwnormal(xdata)
+#     m1, m2 = extrema(xdata)
+    return h0
 end
 
 
@@ -80,7 +90,7 @@ function bwlp0(xdata::RealVector, ydata::RealVector, kernel::Functor{3}=Gkernel(
   length(ydata)==n || error("length(ydata) != length(xdata)")
   h0= bwnormal(xdata)
 
-  Optim.optimize(h->cvlp0(xdata, ydata, h, kernel), .1/n, 10*h0).minimum
+  Optim.optimize(h->cvlp0(xdata, ydata, h, kernel), 0.25*h0, 10*h0).minimum
 end
 
 #see reference:Smoothing Parameter Selection in Nonparametric Regression Using an Improved Akaike Information Criterion
@@ -110,8 +120,20 @@ function bwlp1(xdata::RealVector, ydata::RealVector, kernel::Functor{3}=Gkernel(
     length(ydata)==n || error("length(ydata) != length(xdata)")
     h0= bwnormal(xdata)
 
-    Optim.optimize(h->AIClp1(xdata, ydata, h, kernel), .1/n, 10*h0).minimum
+    Optim.optimize(h->AIClp1(xdata, ydata, h, kernel), 0.25*h0, 10*h0).minimum
 end
+
+function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Functor{3}=Gkernel())
+    n=length(xdata)
+    length(ydata)==n || error("length(ydata) != length(xdata)")
+    h0= bwnormal(xdata)
+    if reg == LP1
+        return Optim.optimize(h->AIClp1(xdata, ydata, h, kernel), 0.25*h0, 10*h0).minimum
+    else
+        return Optim.optimize(h->cvlp0(xdata, ydata, h, kernel), 0.25*h0, 10*h0).minimum
+    end
+end
+
 # #leave-one-out LSCV for multivariate NW
 # function BandwidthLSCVReg(xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel)
 

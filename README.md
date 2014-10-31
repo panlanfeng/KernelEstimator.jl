@@ -62,6 +62,11 @@ In the above functions,
         plot(layer(x=x, y=y, Geom.point), layer(x=xeval, y=yfit1, Geom.line, Theme(default_color=color("black"))), layer(x=xeval, y=cb[1,:], Geom.line, Theme(default_color=color("red"))), layer(x=xeval, y=cb[2,:], Geom.line, Theme(default_color=color("red"))))
 
 
+##To be done
+
+ - Implement multivariate version of kde and local regression
+
+ - Add Gamma and Beta kernel which are useful to remove boundary biase
 
 
 ##Reference
