@@ -26,17 +26,17 @@ NumericExtensions.evaluate(::Ekernel, xi, xeval, h) = ekernel(xi, xeval, h)
 
 # data need to be transformed on [0, ∞]
 # K_{ρₕ(x), h}(xᵢ) = (t/h)^(ρₕ(x)-1) exp(-t/h)/gamma(ρ)/h
-function gammakernel{T<:FloatingPoint}(xi::T, xeval::T, h::T)
-    rhoh = xeval/h
-    if xeval < 0
+function gammakernel{T<:FloatingPoint}(xi::T, x::T, b::T)
+    rhob = x/b
+    if x < 0
         return(0)
-    elseif xeval < 2*h
-        rhoh = 0.25 * rhoh * rhoh + 1
+    elseif x < 2*b
+        rhob = 0.25 * rhob * rhob + 1
     else
         nothing
     end
-    uh = xi/h
-    uh^(rhoh-1) * exp(-uh) / h / gamma(rhoh)
+    xi_b = xi/b
+    xi_b^(rhob-1) * exp(-xi_b) / b / gamma(rhob)
 end
 gammakernel{T<:Real}(xi::T,xeval::T, h::T) = gammakernel(float(xi),float(xeval), float(h))
 gammakernel(xi::Real, xeval::Real, h::Real)=gammakernel(promote(xi, xeval, h)...)

@@ -1,10 +1,11 @@
 
 #univariate kernel density
-function kde(xeval::Real, xdata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwcv(xdata, kernel))
+#
+function kde(xeval::Real, xdata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwkd(xdata, kernel))
     h > 0.0 || error("Bandwidth should be positive")
     mean(kernel, xdata, xeval, h)
 end
-function kde(xeval::RealVector, xdata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwcv(xdata, kernel))
+function kde(xeval::RealVector, xdata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwkd(xdata, kernel))
     h > 0.0 || error("Bandwidth should be positive")
     Float64[mean(kernel, xdata, xeval[i], h) for i=1:length(xeval)]
 end
@@ -21,10 +22,10 @@ function kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf
     elseif (lb > -Inf) & (ub < Inf)
         if h == -Inf
             all(lb .<= xeval .<= ub) & all(lb .<= xdata .<= ub) || error("Your data are not in [lb,ub]")
-            kde((xeval - lb)/(ub - lb), (xdata .- lb)./(ub - lb), kernel=Betakernel(), h=bwkd(xdata, Betakernel()))
+            kde((xeval .- lb)/(ub - lb), (xdata .- lb)./(ub - lb), kernel=Betakernel(), h=bwkd(xdata, Betakernel()))
         else
             all(lb .<= xeval .<= ub) & all(lb .<= xdata .<= ub) || error("Your data are not in [lb,ub]")
-            kde((xeval - lb)/(ub - lb), (xdata .- lb)./(ub - lb), kernel=Betakernel(), h=h)
+            kde((xeval .- lb)/(ub - lb), (xdata .- lb)./(ub - lb), kernel=Betakernel(), h=h)
         end
     elseif (lb > -Inf) & (ub == Inf)
         if h == -Inf

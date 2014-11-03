@@ -1,4 +1,6 @@
-#bandwidth selector
+####bandwidth selector for kernel density
+
+#rule of thumb
 function bwnormal(xdata::RealVector)
     0.9 * min((quantile(xdata, .75) - quantile(xdata, .25)) / 1.34, std(xdata)) * length(xdata) ^ (-0.2)
 end
@@ -24,24 +26,35 @@ end
 Jh(xdata::RealVector, h::Real)=Jh(float(xdata), float(h))
 
 
-#Leave-one-out cross validation. Currently only work for Gaussian Kernel
+#Leave-one-out cross validation for Gaussian Kernel
 #May fail to work if there are multiple equial x_i
 # Silverman suggest search interval be (0.25, 1.5)n^(-0.2)σ
-function bwcv(xdata::RealVector, kernel::Functor{3})
-
+function bwcv(xdata::RealVector)
     n=length(xdata)
     h0=bwnormal(xdata)
-#     m1, m2 = extrema(xdata)
     return Optim.optimize(h -> Jh(xdata, h), 0.25*h0, 10*h0).minimum  # add a lower order item to avoid 0 bandwidth
+end
+
+# likelihood cross validation for beta and gamma kernel
+#there seems no other easy way; least square cross validation can be formidable because their convolution have no close form
+#may also work for other kernels, but likelihood cv has some known disadvantages.
+function lcv(xdata::RealVector, h::Real, kernel::Functor{3})
+    n = length(xdata)
+    -mean(kde(xdata,xdata,kernel=kernel,h=h)) + mean(kernel, xdata, xdata, h)
 end
 
 #to be implemented
 function bwkd(xdata::RealVector, kernel::Functor{3})
-
     n=length(xdata)
     h0=bwnormal(xdata)
-#     m1, m2 = extrema(xdata)
-    return h0
+    if kernel==Gkernel()
+        return Optim.optimize(h -> Jh(xdata, h), h0/n, n*h0).minimum
+    elseif (kernel==Betakernel()) | (kernel==Gammakernel())
+        return Optim.optimize(h->lcv(xdata, h, kernel), h0^2/n^2, n*h0^2).minimum
+    else
+        warning("No bandwidth selector for this kernel, likelihood cross validation is used")
+        return Optim.optimize(h->lcv(xdata, h, kernel), h0/n^2, n*h0).minimum
+    end
 end
 
 
