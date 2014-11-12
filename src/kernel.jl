@@ -1,7 +1,7 @@
 rhoxb{T<:FloatingPoint}(x::T, b::T) = 2*b*b + 2.5 - sqrt(4*b^4 + 6*b*b+2.25 - x*x - x/b)
 rhoxb{T<:Real}(x::T, b::T) = rhoxb(float(x), float(b))
 rhoxb(x::Real, b::Real) = rhoxb(promote(x, b)...)
-function betakernel{T<:FloatingPoint}(x::T, xdata::RealVector{T}, h::T, w::Vector, n::Int)
+function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     a = x / h - 1
     b = (1 - x) / h - 1
     if (x < 0) | (x > 1)
@@ -22,33 +22,31 @@ function betakernel{T<:FloatingPoint}(x::T, xdata::RealVector{T}, h::T, w::Vecto
     multiply!(w, 1/beta(a+1, b+1))
     nothing
 end
-betakernel{T<:Real}(x::T, xdata::RealVector{T}, h::T, w::Vector, n::Int) = betakernel(float(x), float(xdata),float(h), w, n)
 
 
-
-function gammakernel{T<:FloatingPoint}(x::T, xdata::RealVector{T}, h::T, w::Vector, n::Int)
+#xdata should be positive, or domain error will be raised.
+function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     rhob = x/h
-    if x < 0
+    if x <= 0
         fill!(w, 0.0)
         return nothing
     elseif x < 2*h
-        rhob = 0.25 * rhob * rhob + 1
+        rhob = 0.25 * rhob * rhob + 1.0
     end
 
     ind = 1
     ind_end = 1+n
     @inbounds while ind < ind_end
         xi_b = xdata[ind] / h
-        w[ind] = xi_b^(rhob-1) * exp(-xi_b)
+        w[ind] = xi_b^(rhob-1.0) * exp(-xi_b)
         ind += 1
     end
     multiply!(w, 1/(h*gamma(rhob)))
     nothing
 end
-gammakernel{T<:Real}(x::T, xdata::RealVector{T}, h::T, w::Vector, n::Int) = gammakernel(float(x), float(xdata),float(h), w, n)
 
 
-function gaussiankernel{T<:FloatingPoint}(x::T, xdata::RealVector{T}, h::T, w::Vector, n::Int)
+function gaussiankernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     ind = 1
     ind_end = 1+n
     @inbounds while ind < ind_end
@@ -58,9 +56,8 @@ function gaussiankernel{T<:FloatingPoint}(x::T, xdata::RealVector{T}, h::T, w::V
     multiply!(w, invsqrt2pi / h)
     nothing
 end
-gaussiankernel{T<:Real}(x::T, xdata::RealVector{T}, h::T, w::Vector, n::Int) = gaussiankernel(float(x), float(xdata),float(h), w, n)
 
-function ekernel{T<:FloatingPoint}(x::T, xdata::RealVector{T}, h::T, w::Vector, n::Int)
+function ekernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     ind = 1
     ind_end = 1+n
     @inbounds while ind < ind_end
@@ -71,8 +68,6 @@ function ekernel{T<:FloatingPoint}(x::T, xdata::RealVector{T}, h::T, w::Vector, 
     multiply!(w, 0.75 / h)
     nothing
 end
-ekernel{T<:Real}(x::T, xdata::RealVector{T}, h::T, w::Vector, n::Int) = ekernel(float(x), float(xdata),float(h), w, n)
-
 
 # #univariate normal kernel
 

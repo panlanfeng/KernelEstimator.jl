@@ -14,7 +14,7 @@ end
 #J(h) = invsqrt2pi/(n²h) ∑ᵢⱼ (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + 2 * invsqrt2pi /nh
 #J(h) = 2*invsqrt2pi/(n²h) ∑{i<j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2pi/sqrt(2)nh
 #For normal kernel
-function Jh{T<:FloatingPoint}(xdata::RealVector{T}, h::T, n::Int)
+function Jh(xdata::RealVector, h::Real, n::Int)
     tmp = 0.0
     @inbounds for i in 1:(n-1)
         for j in (i+1):n
@@ -25,7 +25,6 @@ function Jh{T<:FloatingPoint}(xdata::RealVector{T}, h::T, n::Int)
     end
     2*tmp / (n*n*h) + 1/(sqrt(2)*n*h)
 end
-Jh(xdata::RealVector, h::Real, n::Int)=Jh(float(xdata), float(h), n)
 
 
 #leave one out
@@ -48,7 +47,7 @@ end
 # function Jh_gammakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
 #     pquadrature(x->begin gammakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, gammakernel, h, w, n)
 # end
-function Jh{T<:FloatingPoint}(xdata::RealVector{T}, kernel::Function, h::T, w::Vector, n::Int, xlb::T, xub::T)
+function Jh(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
     pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
 
@@ -92,7 +91,7 @@ function lcv(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
         ll += log(mean(w))
         ind += 1
     end
-    -ll # *n /(n-1)
+    -ll
 end
 function bwlcv(xdata::RealVector, kernel::Function)
     n = length(xdata)
@@ -226,15 +225,17 @@ function bwlp1(xdata::RealVector, ydata::RealVector, kernel::Function=gaussianke
         hlb = h0/n
         hub = h0
     end
-    Optim.optimize(h->AIClp1(xdata, ydata, kernel, w, n), hlb, hub).minimum
+    Optim.optimize(h->AIClp1(xdata, ydata, kernel,h, w, n), hlb, hub).minimum
 end
 
 function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Function=gaussiankernel)
 
-    if reg == LP1
+    if reg == lp1
         return bwlp1(xdata, ydata, kernel)
-    else
+    elseif reg == lp0
         return bwlp0(xdata, ydata, kernel)
+    else
+        error("I don't know what is $reg")
     end
 end
 

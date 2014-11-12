@@ -21,16 +21,18 @@
 
 ##Univariate kde and regression
 using Distributions
-x=rand(Normal(), 100)
-xeval=linspace(minimum(x), maximum(x), 50)
-den=kde(xeval,x)
+x=rand(Normal(), 500)
+xeval=linspace(minimum(x), maximum(x), 100)
+den=kerneldensity(x, xeval=xeval)
 
-y=2 .* x.^2 + rand(Normal(), 100)
-yfit0=LP0(xeval, x, y)
-yfit1=LP1(xeval, x, y)
 
+y=2 .* x.^2 + rand(Normal(), 500)
+yfit0=lp0(x, y, xeval=xeval)
+yfit1=lp1(x, y, xeval=xeval)
+yfit0=npr(x, y, xeval=xeval, reg=lp0)
+yfit1=npr(x, y, xeval=xeval, reg=lp1)
 #confidence band
-cb=BootstrapCB(100, xeval, x, y, LP1, bwlp1(x, y))
+cb=bootstrapCB(x, y, xeval=xeval)
 
 
 # using Gadfly

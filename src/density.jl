@@ -1,5 +1,5 @@
 
-function kde{T<:Real}(xdata::RealVector{T}, xeval::RealVector{T}, kernel::Function, h::T)
+function kde(xdata::RealVector, xeval::RealVector, kernel::Function, h::Real)
     h > 0.0 || error("h < 0!")
     n = length(xdata)
     w = zeros(n)
@@ -10,7 +10,7 @@ function kde{T<:Real}(xdata::RealVector{T}, xeval::RealVector{T}, kernel::Functi
     end
     return den
 end
-function kde{T<:Real}(xdata::RealVector{T}, xeval::T, kernel::Function, h::T)
+function kde(xdata::RealVector, xeval::Real, kernel::Function, h::Real)
     h > 0.0 || error("h < 0!")
     n = length(xdata)
     w = zeros(n)
@@ -18,22 +18,16 @@ function kde{T<:Real}(xdata::RealVector{T}, xeval::T, kernel::Function, h::T)
     return mean(w)
 end
 
-function kerneldensity{T<:Real}(xdata::RealVector{T}; xeval::RealVector{T}=xdata, lb::Real=-Inf, ub::Real=Inf,
-        kernel::Function=gaussiankernel, h::T=-Inf)
+function kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf,
+        kernel::Function=gaussiankernel, h::Real=-Inf)
 
-    xeval, xdata = boundit(xeval, xdata, kernel, lb, ub)
+    xdata, xeval = boundit(xdata, xeval, kernel, lb, ub)
     if h <= 0
         h = bwlscv(xdata, kernel)
     end
     return kde(xdata, xeval, kernel, h)
 end
 
-function kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf,
-        kernel::Function=gaussiankernel, h::Real=-Inf)
-
-    xdata, xeval, h = promote(xdata, xeval, h)
-    kerneldensity(xdata, xeval = xeval, lb=lb,ub=ub,kernel=kernel,h=h)
-end
 
 # #univariate kernel density
 # #

@@ -1,18 +1,18 @@
 #Bootstrap confidence band for univariate nonparametric regression
 function bootstrapCB(xdata::RealVector, ydata::RealVector;
-    xeval::RealVector=xdata, B::Int64=500, reg::Function=LP1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
+    xeval::RealVector=xdata, B::Int64=500, reg::Function=lp1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
 
     n=length(xdata)
     y_matrix=zeros(B, length(xeval))
     cb=zeros(2, length(xeval))
 
-    xeval, xdata = boundit(xeval, xdata, kernel, lb, ub)
+    xdata, xeval = boundit(xdata, xeval, kernel, lb, ub)
     if h <= 0
         h = bwreg(xdata, ydata, reg, kernel)
     end
 
 
-    yhat=reg(xdata, xdata, ydata, h=h, kernel=kernel)
+    yhat=reg(xdata, ydata, xeval=xdata, h=h, kernel=kernel)
     mhat=copy(yhat)
     e = ydata .- yhat
     coef=[-1,0,2]
@@ -21,7 +21,7 @@ function bootstrapCB(xdata::RealVector, ydata::RealVector;
         boot_coef=coef[rand(Categorical([1/3, 1/2, 1/6]), n)]
         boot_e=boot_coef .* e
         boot_y=mhat .+ boot_e
-        y_matrix[b, :]=reg(xeval, xdata, boot_y, h=h, kernel=kernel)
+        y_matrix[b, :]=reg(xdata, boot_y, xeval=xeval, h=h, kernel=kernel)
     end
     for i in 1:length(xeval)
         cb[:, i]=quantile(y_matrix[:, i], [.975, .025])
