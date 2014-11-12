@@ -12,14 +12,15 @@ using Distributions
 using Optim
 using NumericExtensions
 using StatsBase
+using Cubature
 import StatsBase: RealVector, RealMatrix
  Base.@math_const invsqrt2pi 0.398942280401432677939946 big(1.)/sqrt(big(2.)*π)
 
 
 
-export  kde, kerneldensity, Gkernel, Ekernel,Gammakernel, Betakernel,
+export  kde, kerneldensity, gaussiankernel, ekernel,gammakernel, betakernel,
         LP0, LP1, npr,
-        bwkd, bwnormal, bwcv, bwlp0, bwlp1,bwreg,
+        bwkd, bwnormal, bwlscv, bwlcv, bwlp0, bwlp1,bwreg,
 #         Sind,
         BootstrapCB
 #         BootstrapGoodness

@@ -4,17 +4,19 @@
 function bwnormal(xdata::RealVector)
     0.9 * min((quantile(xdata, .75) - quantile(xdata, .25)) / 1.34, std(xdata)) * length(xdata) ^ (-0.2)
 end
-
+function midrange(x::RealVector)
+    lq, uq = quantile(x, [.25, .75])
+    uq - lq
+end
 
 # J(h)=∑ᵢⱼK'((xᵢ - xⱼ)/h) /(n²h) + 2K(0)/(nh) =
 # where K'(u) = invsqrt2pi(exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u))
 #J(h) = invsqrt2pi/(n²h) ∑ᵢⱼ (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + 2 * invsqrt2pi /nh
 #J(h) = 2*invsqrt2pi/(n²h) ∑{i<j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2pi/sqrt(2)nh
 #For normal kernel
-function Jh{T<:FloatingPoint}(xdata::Vector{T}, h::T)
-    n=length(xdata)
+function Jh{T<:FloatingPoint}(xdata::Vector{T}, h::T, n::Int)
     tmp = 0.0
-    for i in 1:(n-1)
+    @inbounds for i in 1:(n-1)
         for j in (i+1):n
             u = (xdata[i] - xdata[j])/h
             u = exp(-0.25*u*u)
@@ -23,39 +25,109 @@ function Jh{T<:FloatingPoint}(xdata::Vector{T}, h::T)
     end
     2*tmp / (n*n*h) + 1/(sqrt(2)*n*h)
 end
-Jh(xdata::RealVector, h::Real)=Jh(float(xdata), float(h))
+Jh(xdata::RealVector, h::Real, n::Int)=Jh(float(xdata), float(h), n)
+
+#numeric integration lscv
+# function lscv_convolution{T<:FloatingPoint}(x::T, xdata::Vector{T}, kernel::Function, h::T, w::Vector, n::Int)
+
+#     kernel(x, xdata, h, w, n)
+#     mean(w)^2
+# end
+#leave one out
+function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+    ind = 1
+    ind_end = 1+n
+    ll = 0.0
+    @inbounds while ind < ind_end
+        kernel(xdata[ind], xdata, h, w, n)
+        w[ind] = 0.0
+        ll += mean(w)
+        ind += 1
+    end
+    ll * 2 / (n-1)
+end
+
+function Jh_betakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
+    pquadrature(x->begin betakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, betakernel, h, w, n)
+end
+function Jh_gammakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
+    pquadrature(x->begin gammakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, gammakernel, h, w, n)
+end
 
 
-#Leave-one-out cross validation for Gaussian Kernel
+#Least Squares cross validation for Gaussian Kernel
 #May fail to work if there are multiple equial x_i
 # Silverman suggest search interval be (0.25, 1.5)n^(-0.2)σ
-function bwcv(xdata::RealVector)
+function bwlscv(xdata::RealVector, kernel::Function)
     n=length(xdata)
     h0=bwnormal(xdata)
-    return Optim.optimize(h -> Jh(xdata, h), 0.25*h0, 10*h0).minimum  # add a lower order item to avoid 0 bandwidth
+    if kernel == gaussiankernel
+        return Optim.optimize(h -> Jh(xdata, h, n), 0.01*h0, 10*h0, iterations=100, abs_tol=h0/n).minimum
+    end
+
+    h0=midrange(xdata)
+    hlb = h0/n
+    hub = h0
+    w  = zeros(n)
+    xlb, xub = extrema(xdata)
+    if kernel == betakernel
+        xlb = 0.0
+        xub = 1.0
+        return Optim.optimize(h -> Jh_betakernel(xdata, h, w, n, xlb, xub), hlb, 0.25, iterations=100,abs_tol=h0/n^2).minimum
+    elseif kernel == gammakernel
+        xlb = 0.0
+        return Optim.optimize(h -> Jh_gammakernel(xdata, h, w, n, xlb,xub), hlb, hub, iterations=100,abs_tol=h0/n^2).minimum
+    else
+        error("Lscv is not implemented for this kernel yet. Use bwlcv instead.")
+    end
+#     return Optim.optimize(h -> Jh(xdata, h, w, n, xlb, xub), 0.25*h0, 10*h0, iterations=100).minimum
 end
 
 # likelihood cross validation for beta and gamma kernel
 #there seems no other easy way; least square cross validation can be formidable because their convolution have no close form
 #may also work for other kernels, but likelihood cv has some known disadvantages.
-function lcv(xdata::RealVector, h::Real, kernel::Functor{3})
+#Not recommended, but easy to implement for arbitrary kernel
+function lcv(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+#     -mean(kde(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
+    ind = 1
+    ind_end = 1+n
+    ll = 1.0
+    @inbounds while ind < ind_end
+        kernel(xdata[ind], xdata, h, w, n)
+        w[ind] = 0.0
+        ll += log(mean(w))
+        ind += 1
+    end
+    -ll # *n /(n-1)
+end
+function bwlcv(xdata::RealVector, kernel::Function)
     n = length(xdata)
-    -mean(kde(xdata,xdata,kernel=kernel,h=h)) + mean(kernel, xdata, xdata, h)
+    w = zeros(n)
+    h0=midrange(xdata)
+    hlb = h0/n^2
+    hub = h0
+    if kernel==betakernel
+        hub = 0.25
+    end
+    return Optim.optimize(h->lcv(xdata,kernel,h,w,n), hlb, hub, iterations=100,abs_tol=h0/n^2).minimum
 end
 
-#to be implemented
-function bwkd(xdata::RealVector, kernel::Functor{3})
-    n=length(xdata)
-    h0=bwnormal(xdata)
-    if kernel==Gkernel()
-        return Optim.optimize(h -> Jh(xdata, h), h0/n, n*h0).minimum
-    elseif (kernel==Betakernel()) | (kernel==Gammakernel())
-        return Optim.optimize(h->lcv(xdata, h, kernel), h0^2/n^2, n*h0^2).minimum
-    else
-        warning("No bandwidth selector for this kernel, likelihood cross validation is used")
-        return Optim.optimize(h->lcv(xdata, h, kernel), h0/n^2, n*h0).minimum
-    end
-end
+
+# #to be implemented
+# function bwkd(xdata::RealVector, kernel::Function)
+#     n=length(xdata)
+#     h0=bwnormal(xdata)
+#     if kernel==gaussiankernel
+#         return Optim.optimize(h -> Jh(xdata, h), h0/n, n*h0).minimum
+#     elseif kernel==betakernel
+#         return Optim.optimize(h->lcv(xdata, h, kernel), h0^2/n^2, 0.25).minimum
+#     elseif kernel==gammakernel
+#         return Optim.optimize(h->lcv(xdata, h, kernel), h0^2/n^2, n*h0).minimum
+#     else
+#         warn("No bandwidth selector for this kernel, likelihood cross validation is used")
+#         return Optim.optimize(h->lcv(xdata, h, kernel), h0/n^2, n*h0).minimum
+#     end
+# end
 
 
 #multivariate
