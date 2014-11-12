@@ -1,5 +1,5 @@
 
-function kde{T<:Real}(xdata::Vector{T}, xeval::Vector{T}, kernel::Function, h::T)
+function kde{T<:Real}(xdata::RealVector{T}, xeval::RealVector{T}, kernel::Function, h::T)
     h > 0.0 || error("h < 0!")
     n = length(xdata)
     w = zeros(n)
@@ -10,7 +10,7 @@ function kde{T<:Real}(xdata::Vector{T}, xeval::Vector{T}, kernel::Function, h::T
     end
     return den
 end
-function kde{T<:Real}(xdata::Vector{T}, xeval::T, kernel::Function, h::T)
+function kde{T<:Real}(xdata::RealVector{T}, xeval::T, kernel::Function, h::T)
     h > 0.0 || error("h < 0!")
     n = length(xdata)
     w = zeros(n)
@@ -18,7 +18,7 @@ function kde{T<:Real}(xdata::Vector{T}, xeval::T, kernel::Function, h::T)
     return mean(w)
 end
 
-function kerneldensity{T<:Real}(xdata::Vector{T}; xeval::Vector{T}=xdata, lb::Real=-Inf, ub::Real=Inf,
+function kerneldensity{T<:Real}(xdata::RealVector{T}; xeval::RealVector{T}=xdata, lb::Real=-Inf, ub::Real=Inf,
         kernel::Function=gaussiankernel, h::T=-Inf)
 
     xeval, xdata = boundit(xeval, xdata, kernel, lb, ub)
@@ -28,7 +28,7 @@ function kerneldensity{T<:Real}(xdata::Vector{T}; xeval::Vector{T}=xdata, lb::Re
     return kde(xdata, xeval, kernel, h)
 end
 
-function kerneldensity{T<:Real, S<:Real}(xdata::Vector{T}; xeval::Vector{S}=xdata, lb::Real=-Inf, ub::Real=Inf,
+function kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf,
         kernel::Function=gaussiankernel, h::Real=-Inf)
 
     xdata, xeval, h = promote(xdata, xeval, h)

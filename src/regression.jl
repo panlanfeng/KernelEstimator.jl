@@ -6,7 +6,9 @@ function lp0{T<:Real}(xdata::RealVector{T}, ydata::RealVector{T}, xeval::T; kern
     kernel(xeval, xdata, h, w, n)
     wsum(w, ydata)/sum(w)
 end
-function lp0{T<:Real}(xdata::RealVector{T}, ydata::RealVector{T}; xeval::RealVector{T}=xdata, kernel::Function=gammakernel, h::T=bwlp0(xdata,ydata,kernel))
+function lp0{T<:Real}(xdata::RealVector{T}, ydata::RealVector{T}; xeval::RealVector{T}=xdata,
+        kernel::Function=gammakernel, h::T=bwlp0(xdata,ydata,kernel))
+
     n=length(xdata)
     length(ydata) == n || error("length(ydata) != length(xdata)")
     w=ones(n)
@@ -31,7 +33,7 @@ type YXdiff <: Functor{3} end
 NumericExtensions.evaluate(::YXdiff, xi, xeval, y) = yxdiff(xi, xeval, y)
 
 ##univariate local linear
-function lp1{T<:Real}(xdata::Vector{T}, ydata::Vector{T}, xeval::T; kernel::Function=gaussiankernel, h::T=bwlp1(xdata, ydata, kernel))
+function lp1{T<:Real}(xdata::RealVector{T}, ydata::RealVector{T}, xeval::T; kernel::Function=gaussiankernel, h::T=bwlp1(xdata, ydata, kernel))
     n=length(xdata)
     length(ydata) == n || error("length of ydata not the same with xdata")
     w = ones(n)
@@ -43,7 +45,7 @@ function lp1{T<:Real}(xdata::Vector{T}, ydata::Vector{T}, xeval::T; kernel::Func
     sy1 = NumericExtensions.wsum(w, YXdiff(), xdata, xeval, ydata)
     (s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1)
 end
-function lp1{T<:Real}(xdata::Vector{T}, ydata::Vector{T}; xeval::Vector{T}=xdata, kernel::Function=gaussiankernel, h::T=bwlp1(xdata, ydata, kernel))
+function lp1{T<:Real}(xdata::RealVector{T}, ydata::RealVector{T}; xeval::RealVector{T}=xdata, kernel::Function=gaussiankernel, h::T=bwlp1(xdata, ydata, kernel))
     n=length(xdata)
     length(ydata) == n || error("length of ydata not the same with xdata")
     w = ones(n)
@@ -60,7 +62,7 @@ function lp1{T<:Real}(xdata::Vector{T}, ydata::Vector{T}; xeval::Vector{T}=xdata
     pre
 end
 
-function lp1(xdata::RealVector, ydata::RealVector;kernel::Function=gaussiankernel, h::Real=bwlp1(xdata, ydata, kernel))
+function lp1(xdata::RealVector, ydata::RealVector; kernel::Function=gaussiankernel, h::Real=bwlp1(xdata, ydata, kernel))
     xdata, ydata, xeval, h = promote(xdata, ydata,xeval, h)
     lp1(xdata,ydata,xeval=xeval, kernel=kernel, h=h)
 end
@@ -103,7 +105,7 @@ function npr{T<:Real}(xdata::Vector{T}, ydata::Vector{T}; xeval::Vector{T}=xdata
     end
     reg(xeval, xdata, ydata, kernel=kernel, h=h)
 end
-function npr{T<:Real, S<:Real, P<:Real}(xdata::Vector{T}, ydata::Vector{S}; xeval::Vector{P}=xdata, reg::Function=LP1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
+function npr(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, reg::Function=LP1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
     xdata, ydata, xeval, h = promote(xdata, ydata, xeval, h)
     npr(xdata, ydata, xeval=xeval, reg=reg, lb=lb, ub=ub,kernel, h=h)
 end

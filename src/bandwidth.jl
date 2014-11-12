@@ -14,7 +14,7 @@ end
 #J(h) = invsqrt2pi/(n²h) ∑ᵢⱼ (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + 2 * invsqrt2pi /nh
 #J(h) = 2*invsqrt2pi/(n²h) ∑{i<j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2pi/sqrt(2)nh
 #For normal kernel
-function Jh{T<:FloatingPoint}(xdata::Vector{T}, h::T, n::Int)
+function Jh{T<:FloatingPoint}(xdata::RealVector{T}, h::T, n::Int)
     tmp = 0.0
     @inbounds for i in 1:(n-1)
         for j in (i+1):n
@@ -48,7 +48,7 @@ end
 # function Jh_gammakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
 #     pquadrature(x->begin gammakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, gammakernel, h, w, n)
 # end
-function Jh{T<:FloatingPoint}(xdata::Vector{T}, kernel::Function, h::T, w::Vector, n::Int, xlb::T, xub::T)
+function Jh{T<:FloatingPoint}(xdata::RealVector{T}, kernel::Function, h::T, w::Vector, n::Int, xlb::T, xub::T)
     pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
 
