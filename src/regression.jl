@@ -1,43 +1,27 @@
 #univariate nadaraya-watson estimate
-function LP0(xeval::Real, xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel))
+function lp0{T<:Real}(xdata::RealVector{T}, ydata::RealVector{T}, xeval::T; kernel::Function=gammakernel, h::T=bwlp0(xdata,ydata,kernel))
     n=length(xdata)
-    length(ydata) == n || error("length of ydata not the same with xdata")
+    length(ydata) == n || error("length(ydata) != length(xdata)")
     w=ones(n)
-    map!(kernel,w, xdata, xeval, h)
+    kernel(xeval, xdata, h, w, n)
     wsum(w, ydata)/sum(w)
 end
-# LP0(xeval::Real, xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel)) = LP0(float(xeval), float(xdata), float(ydata), h=float(h), kernel=kernel)
-LP0(xeval::RealVector, xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel))=Float64[LP0(xeval[i], xdata,ydata,h=h, kernel=kernel) for i=1:length(xeval)]
-LP0(xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp0(xdata,ydata,kernel))=LP0(xdata, xdata, ydata, kernel=kernel,h=h)
-
-function npr(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, reg::Function=LP1, lb::Real=-Inf, ub::Real=Inf, kernel::Functor{3}=Gkernel(), h::Real=-Inf)
-    if (lb == -Inf) & (ub == Inf)
-        if h==-Inf
-            return reg(xeval, xdata, ydata, kernel=kernel, h=bwreg(xdata,ydata, reg, kernel))
-        else
-            return reg(xeval, xdata, ydata, kernel=kernel, h=h)
-        end
-    elseif (lb > -Inf) & (ub < Inf)
-        if h == -Inf
-            return reg((xeval .- lb) ./ (ub - lb), (xdata.-lb)./(ub - lb), ydata, kernel=Betakernel(), h=bwreg(xdata,ydata,reg, kernel))
-        else
-            return reg((xeval .- lb) ./ (ub - lb), (xdata.-lb)./(ub - lb), ydata, kernel=Betakernel(), h=h)
-        end
-    elseif (lb > -Inf) & (ub == Inf)
-        if h == -Inf
-            return reg(xeval .- lb, xdata .- lb, ydata, kernel=Gammakernel(), h=bwreg(xdata, ydata, reg, kernel))
-        else
-            return reg(xeval .- lb, xdata .- lb, ydata, kernel=Gammakernel(), h=h)
-        end
-    else (lb == -Inf) & (ub < Inf)
-        if h == -Inf
-            return reg(ub .- xeval, ub .- xdata, ydata, kernel=GammaKernel(), h=bwreg(xdata, ydata, reg, kernel))
-        else
-            return reg(ub .- xeval, ub .- xdata, ydata, kernel=GammaKernel(), h=h)
-        end
+function lp0{T<:Real}(xdata::RealVector{T}, ydata::RealVector{T}; xeval::RealVector{T}=xdata, kernel::Function=gammakernel, h::T=bwlp0(xdata,ydata,kernel))
+    n=length(xdata)
+    length(ydata) == n || error("length(ydata) != length(xdata)")
+    w=ones(n)
+    pre = zeros(length(xeval))
+    for i in 1:length(xeval)
+        kernel(xeval[i], xdata, h, w, n)
+        pre[i] = wsum(w, ydata)/sum(w)
     end
+    pre
 end
 
+function lp0(xdata::RealVector, ydata::RealVector;xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlp0(xdata,ydata,kernel))
+    xdata, ydata, xeval, h = promote(xdata, ydata,xeval, h)
+    lp0(xdata, ydata, xeval=xeval, kernel=kernel,h=h)
+end
 
 
 yxdiff{T<:FloatingPoint}(xi::T, xeval::T, y::T)=y*(xeval - xi)
@@ -46,26 +30,83 @@ yxdiff(xi::Real, xeval::Real, y::Real)=yxdiff(promote(xi, xeval, y)...)
 type YXdiff <: Functor{3} end
 NumericExtensions.evaluate(::YXdiff, xi, xeval, y) = yxdiff(xi, xeval, y)
 
-
 ##univariate local linear
-function LP1(xeval::Real, xdata::RealVector, ydata::RealVector; kernel::Functor{3}=Gkernel(), h::Real=bwlp1(xdata, ydata, kernel))
+function lp1{T<:Real}(xdata::Vector{T}, ydata::Vector{T}, xeval::T; kernel::Function=gaussiankernel, h::T=bwlp1(xdata, ydata, kernel))
     n=length(xdata)
     length(ydata) == n || error("length of ydata not the same with xdata")
     w = ones(n)
-    map!(kernel, w, xdata, xeval, h)
+    kernel(xeval, xdata, h, w, n)
     s0 = sum(w)
     s1 = s0*xeval - wsum(w, xdata)
     s2 = wsumsqdiff(w, xdata, xeval)
     sy0 = wsum(w, ydata)
     sy1 = NumericExtensions.wsum(w, YXdiff(), xdata, xeval, ydata)
-
     (s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1)
-
 end
-LP1(xeval::RealVector, xdata::RealVector, ydata::RealVector;kernel::Functor{3}=Gkernel(), h::Real=bwlp1(xdata, ydata, kernel))=Float64[LP1(xeval[i], xdata,ydata,h=h, kernel=kernel) for i=1:length(xeval)]
-LP1(xdata::RealVector, ydata::RealVector;kernel::Functor{3}=Gkernel(), h::Real=bwlp1(xdata, ydata, kernel))=LP1(xdata, xdata,ydata,kernel=kernel, h=h)
+function lp1{T<:Real}(xdata::Vector{T}, ydata::Vector{T}; xeval::Vector{T}=xdata, kernel::Function=gaussiankernel, h::T=bwlp1(xdata, ydata, kernel))
+    n=length(xdata)
+    length(ydata) == n || error("length of ydata not the same with xdata")
+    w = ones(n)
+    pre = zeros(length(xeval))
+    for i in 1:length(xeval)
+        kernel(xeval[i], xdata, h, w, n)
+        s0 = sum(w)
+        s1 = s0*xeval[i] - wsum(w, xdata)
+        s2 = wsumsqdiff(w, xdata, xeval[i])
+        sy0 = wsum(w, ydata)
+        sy1 = NumericExtensions.wsum(w, YXdiff(), xdata, xeval[i], ydata)
+        pre[i] = (s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1)
+    end
+    pre
+end
+
+function lp1(xdata::RealVector, ydata::RealVector;kernel::Function=gaussiankernel, h::Real=bwlp1(xdata, ydata, kernel))
+    xdata, ydata, xeval, h = promote(xdata, ydata,xeval, h)
+    lp1(xdata,ydata,xeval=xeval, kernel=kernel, h=h)
+end
 
 
+function boundit(xeval::RealVector, xdata::RealVector, kernel::Function, lb::Real, ub::Real)
+    if (lb == -Inf) & (ub == Inf)
+        return (xeval, xdata)
+    elseif (lb > -Inf) & (ub < Inf)
+        all(lb .<= xeval .<= ub) & all(lb .<= xdata .<= ub) || error("Your data are not in [lb,ub]")
+        xeval = (xeval .- lb)./(ub - lb)
+        xdata = (xdata .- lb)./(ub - lb)
+        if kernel != betakernel
+            warn("Beta kernel is recommended to be used")
+        end
+    elseif (lb > -Inf) & (ub == Inf)
+        all(xeval .>= lb) & all(xdata .>= lb) || error("lb should be less than your data")
+        xeval = xeval .- lb
+        xdata = xdata .- lb
+        if kernel != gammakernel
+            warn("Gamma kernel is recommended to be used")
+        end
+    elseif (lb == -Inf) & (ub < Inf)
+        all(xeval .<= ub) & all(xdata .<= ub) || error("ub should be greater than your data")
+        xeval = ub .- xeval
+        xdata = ub .- xdata
+        if kernel != gammakernel
+            warn("Gamma kernel is recommended to be used")
+        end
+    end
+    (xeval, xdata)
+end
+
+function npr{T<:Real}(xdata::Vector{T}, ydata::Vector{T}; xeval::Vector{T}=xdata,
+        reg::Function=LP1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
+
+    xeval, xdata = boundit(xeval, xdata, kernel, lb, ub)
+    if h <= 0
+        h = bwreg(xdata, ydata, reg, kernel)
+    end
+    reg(xeval, xdata, ydata, kernel=kernel, h=h)
+end
+function npr{T<:Real, S<:Real, P<:Real}(xdata::Vector{T}, ydata::Vector{S}; xeval::Vector{P}=xdata, reg::Function=LP1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
+    xdata, ydata, xeval, h = promote(xdata, ydata, xeval, h)
+    npr(xdata, ydata, xeval=xeval, reg=reg, lb=lb, ub=ub,kernel, h=h)
+end
 
 # #multi-variate nadaraya-watson
 # function LP0(xeval::Vector{Float64}, xdata::Matrix{Float64}, ydata::Vector{Float64}, kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCVReg(xdata,ydata,LP0,kernel))

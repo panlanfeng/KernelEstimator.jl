@@ -27,12 +27,7 @@ function Jh{T<:FloatingPoint}(xdata::Vector{T}, h::T, n::Int)
 end
 Jh(xdata::RealVector, h::Real, n::Int)=Jh(float(xdata), float(h), n)
 
-#numeric integration lscv
-# function lscv_convolution{T<:FloatingPoint}(x::T, xdata::Vector{T}, kernel::Function, h::T, w::Vector, n::Int)
 
-#     kernel(x, xdata, h, w, n)
-#     mean(w)^2
-# end
 #leave one out
 function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
     ind = 1
@@ -47,13 +42,15 @@ function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n:
     ll * 2 / (n-1)
 end
 
-function Jh_betakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
-    pquadrature(x->begin betakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, betakernel, h, w, n)
+# function Jh_betakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
+#     pquadrature(x->begin betakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, betakernel, h, w, n)
+# end
+# function Jh_gammakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
+#     pquadrature(x->begin gammakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, gammakernel, h, w, n)
+# end
+function Jh{T<:FloatingPoint}(xdata::Vector{T}, kernel::Function, h::T, w::Vector, n::Int, xlb::T, xub::T)
+    pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
-function Jh_gammakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
-    pquadrature(x->begin gammakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, gammakernel, h, w, n)
-end
-
 
 #Least Squares cross validation for Gaussian Kernel
 #May fail to work if there are multiple equial x_i
@@ -65,22 +62,19 @@ function bwlscv(xdata::RealVector, kernel::Function)
         return Optim.optimize(h -> Jh(xdata, h, n), 0.01*h0, 10*h0, iterations=100, abs_tol=h0/n).minimum
     end
 
+    xlb, xub = extrema(xdata)
     h0=midrange(xdata)
     hlb = h0/n
     hub = h0
     w  = zeros(n)
-    xlb, xub = extrema(xdata)
     if kernel == betakernel
         xlb = 0.0
         xub = 1.0
-        return Optim.optimize(h -> Jh_betakernel(xdata, h, w, n, xlb, xub), hlb, 0.25, iterations=100,abs_tol=h0/n^2).minimum
+        hub = 0.25
     elseif kernel == gammakernel
         xlb = 0.0
-        return Optim.optimize(h -> Jh_gammakernel(xdata, h, w, n, xlb,xub), hlb, hub, iterations=100,abs_tol=h0/n^2).minimum
-    else
-        error("Lscv is not implemented for this kernel yet. Use bwlcv instead.")
     end
-#     return Optim.optimize(h -> Jh(xdata, h, w, n, xlb, xub), 0.25*h0, 10*h0, iterations=100).minimum
+    return Optim.optimize(h -> Jh(xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=100,abs_tol=h0/n^2).minimum
 end
 
 # likelihood cross validation for beta and gamma kernel
@@ -157,65 +151,90 @@ end
 # end
 
 #leave-one-out LSCV. 1/n \sum((yi - yihat)/(1-wi))
-function cvlp0(xdata::RealVector, ydata::RealVector, h::Real, kernel::Functor{3})
-    n = length(ydata)
+function lscvlp0(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
     tmp = 0.0
-    w = ones(n)
-    for i in 1:n
-        map!(kernel, w, xdata, xdata[i], h)
+    ind = 1
+    ind_end = 1 + n
+    @inbounds while ind < ind_end
+#         map!(kernel, w, xdata, xdata[i], h)
+        kernel(xdata[ind], xdata, h, w, n)
         divide!(w, sum(w))
-        tmp += abs2((wsum(w, ydata) - ydata[i])/(1-w[i]))
+        tmp += abs2((wsum(w, ydata) - ydata[ind])/(1-w[ind]))
+        ind += 1
     end
     tmp/n
 end
 
-function bwlp0(xdata::RealVector, ydata::RealVector, kernel::Functor{3}=Gkernel())
-
-  n=length(xdata)
-  length(ydata)==n || error("length(ydata) != length(xdata)")
-  h0= bwnormal(xdata)
-
-  Optim.optimize(h->cvlp0(xdata, ydata, h, kernel), 0.25*h0, 10*h0).minimum
+function bwlp0(xdata::RealVector, ydata::RealVector, kernel::Function=gaussiankernel)
+    n=length(xdata)
+    length(ydata)==n || error("length(ydata) != length(xdata)")
+    w = ones(n)
+    if kernel == gaussiankernel
+        h0= bwnormal(xdata)
+        hlb = 0.1*h0
+        hub = 10*h0
+    elseif kernel == betakernel
+        h0 = midrange(xdata)
+        hlb = h0/n
+        hub = 0.25
+    elseif kernel == gammakernel
+        h0 = midrange(xdata)
+        hlb = h0/n
+        hub = h0
+    end
+    Optim.optimize(h->lscvlp0(xdata, ydata, kernel, h, w, n), hlb, hub).minimum
 end
 
 #see reference:Smoothing Parameter Selection in Nonparametric Regression Using an Improved Akaike Information Criterion
 # Clifford M. Hurvich, Jeffrey S. Simonoff and Chih-Ling Tsai
 # Journal of the Royal Statistical Society. Series B (Statistical Methodology), Vol. 60, No. 2 (1998), pp. 271-293
 #http://www.jstor.org/stable/2985940
-function AIClp1(xdata::RealVector, ydata::RealVector, h::Real, kernel::Functor{3})
-    n = length(ydata)
+function AIClp1(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
     tmp = 0.0
     traceH = 0.0
-    w=ones(n)
-    for i in 1:n
-          map!(kernel, w, xdata, xdata[i], h)
+    ind = 1
+    ind_end = 1+n
+    @inbounds while ind < ind_end
+#           map!(kernel, w, xdata, xdata[i], h)
+          kernel(xdata[ind], xdata, h, w, n)
           s0 = sum(w)
-          s1 = s0*xdata[i] - wsum(w, xdata)
-          s2 = wsumsqdiff(w, xdata, xdata[i])
+          s1 = s0*xdata[ind] - wsum(w, xdata)
+          s2 = wsumsqdiff(w, xdata, xdata[ind])
           sy0 = wsum(w, ydata)
-          sy1 = NumericExtensions.wsum(w, YXdiff(), xdata, xdata[i], ydata)
-          tmp+=abs2((s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1) - ydata[i])
-          traceH += s0*w[i]/(s2 * s0 - s1 * s1)
+          sy1 = NumericExtensions.wsum(w, YXdiff(), xdata, xdata[ind], ydata)
+          tmp+=abs2((s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1) - ydata[ind])
+          traceH += s0*w[ind]/(s2 * s0 - s1 * s1)
+          ind += 1
     end
     tmp/n  + 2*(traceH+1)/(n-traceH-2)
 end
 
-function bwlp1(xdata::RealVector, ydata::RealVector, kernel::Functor{3}=Gkernel())
+function bwlp1(xdata::RealVector, ydata::RealVector, kernel::Function=gaussiankernel)
     n=length(xdata)
     length(ydata)==n || error("length(ydata) != length(xdata)")
-    h0= bwnormal(xdata)
-
-    Optim.optimize(h->AIClp1(xdata, ydata, h, kernel), 0.25*h0, 10*h0).minimum
+    w = ones(n)
+    if kernel == gaussiankernel
+        h0= bwnormal(xdata)
+        hlb = 0.1*h0
+        hub = 10*h0
+    elseif kernel == betakernel
+        h0 = midrange(xdata)
+        hlb = h0/n
+        hub = 0.25
+    elseif kernel == gammakernel
+        h0 = midrange(xdata)
+        hlb = h0/n
+        hub = h0
+    end
+    Optim.optimize(h->AIClp1(xdata, ydata, kernel, w, n), hlb, hub).minimum
 end
 
-function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Functor{3}=Gkernel())
-    n=length(xdata)
-    length(ydata)==n || error("length(ydata) != length(xdata)")
-    h0= bwnormal(xdata)
+function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Function=gaussiankernel)
+
     if reg == LP1
-        return Optim.optimize(h->AIClp1(xdata, ydata, h, kernel), 0.25*h0, 10*h0).minimum
+        return bwlp1(xdata, ydata, kernel)
     else
-        return Optim.optimize(h->cvlp0(xdata, ydata, h, kernel), 0.25*h0, 10*h0).minimum
+        return bwlp0(xdata, ydata, kernel)
     end
 end
 

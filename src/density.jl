@@ -1,58 +1,37 @@
 
-function kde{T<:Real}(x::Vector{T}, xdata::Vector{T}, kernel::Function, h::T)
+function kde{T<:Real}(xdata::Vector{T}, xeval::Vector{T}, kernel::Function, h::T)
     h > 0.0 || error("h < 0!")
     n = length(xdata)
     w = zeros(n)
-    den = zeros(length(x))
-    for i in 1:length(x)
-        kernel(x[i], xdata, h, w, n)
+    den = zeros(length(xeval))
+    for i in 1:length(xeval)
+        kernel(xeval[i], xdata, h, w, n)
         den[i] = mean(w)
     end
     return den
 end
-function kde{T<:Real}(x::T, xdata::Vector{T}, kernel::Function, h::T)
+function kde{T<:Real}(xdata::Vector{T}, xeval::T, kernel::Function, h::T)
     h > 0.0 || error("h < 0!")
     n = length(xdata)
     w = zeros(n)
-    kernel(x, xdata, h, w, n)
+    kernel(xeval, xdata, h, w, n)
     return mean(w)
 end
 
-function kerneldensity{T<:Real}(xdata::Vector{T}; xeval::Vector{T}=xdata, lb::T=-Inf, ub::T=Inf, kernel::Function=gaussiankernel, h::T=-Inf)
+function kerneldensity{T<:Real}(xdata::Vector{T}; xeval::Vector{T}=xdata, lb::Real=-Inf, ub::Real=Inf,
+        kernel::Function=gaussiankernel, h::T=-Inf)
 
-    if (lb > -Inf) & (ub < Inf)
-        all(lb .<= xeval .<= ub) & all(lb .<= xdata .<= ub) || error("Your data are not in [lb,ub]")
-        xeval = (xeval .- lb)./(ub - lb)
-        xdata = (xdata .- lb)./(ub - lb)
-        if kernel != betakernel
-            kernel = betakernel
-            warn("kernel is set to be beta kernel")
-        end
-    elseif (lb > -Inf) & (ub == Inf)
-        all(xeval .>= lb) & all(xdata .>= lb) || error("lb should be less than your data")
-        xeval = xeval .- lb
-        xdata = xdata .- lb
-        if kernel != gammakernel
-            kernel = gammakernel
-            warn("kernel is set to be beta kernel")
-        end
-    elseif (lb == -Inf) & (ub < Inf)
-        all(xeval .<= ub) & all(xdata .<= ub) || error("ub should be greater than your data")
-        xeval = ub .- xeval
-        xdata = ub .- xdata
-        if kernel != gammakernel
-            kernel = gammakernel
-            warn("kernel is set to be beta kernel")
-        end
-    end
+    xeval, xdata = boundit(xeval, xdata, kernel, lb, ub)
     if h <= 0
         h = bwlscv(xdata, kernel)
     end
-    return kde(xeval, xdata, kernel, h)
+    return kde(xdata, xeval, kernel, h)
 end
 
-function kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
-    xdata, xeval, lb, ub, h = promote(xdata, xeval, lb, ub, h)
+function kerneldensity{T<:Real, S<:Real}(xdata::Vector{T}; xeval::Vector{S}=xdata, lb::Real=-Inf, ub::Real=Inf,
+        kernel::Function=gaussiankernel, h::Real=-Inf)
+
+    xdata, xeval, h = promote(xdata, xeval, h)
     kerneldensity(xdata, xeval = xeval, lb=lb,ub=ub,kernel=kernel,h=h)
 end
 
