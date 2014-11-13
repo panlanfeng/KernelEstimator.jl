@@ -1,12 +1,14 @@
 # Nonparametric
+
+[![Build Status](https://travis-ci.org/panlanfeng/Nonparametric.jl.png)](https://travis-ci.org/panlanfeng/Nonparametric.jl)
+
+
 The Julia package for nonparametric density estimate and regression. Currently includes univariate kernel density estimate, local constant regression (Nadaraya-watson estimator) and local linear regression. Can also compute the Bootstrap confidence band [4] for the regression estimator. The previous support for multivariate density estimation and regression are temporarily removed because of the low efficiency.
 
 This package provides Gamma and Beta kernel to deal with bounded density estimation and regression problem. These two kernels are free of boundary bias for one side bounded and two sides bounded problems respectively, see [2, 3]. In particular, least square cross validation (LSCV) bandwidth selection functions are implemented. The convolution of these two kernels have no closed form and numeric integration is used here. So it can be slow for large datasets.
 
 Bandwidth selection is critical in kernel estimation. But no Julia packages provide reliable bandwidth selection function (before Nov 12, 2014). Several bandwidth selction approaches are provided in this package. LSCV is always recommended for kernel density estimation. Likelihood cross validation is provided but should be avoided because of known drawbacks. For regression problem, the bandwidth of local constant regression is selected using LSCV while that for local linear regression is chosen by AIC [6].
 
-
-[![Build Status](https://travis-ci.org/panlanfeng/Nonparametric.jl.png)](https://travis-ci.org/panlanfeng/Nonparametric.jl)
 
 ## Functions
 This package provides the following functions:
@@ -85,9 +87,9 @@ The meaning of arguments:
 
  - [1] Lecture notes from Dr. Song Xi Chen
 
- - [2] Chen, Song Xi. "Beta kernel estimators for density functions." Computational Statistics & Data Analysis 31, no. 2 (1999): 131-145.
+ - [2] Chen, Song Xi. "Beta kernel estimators for density functions." _Computational Statistics & Data Analysis_ 31, no. 2 (1999): 131-145.
 
- - [3] Chen, Song Xi. "Probability density function estimation using gamma kernels." Annals of the Institute of Statistical Mathematics 52, no. 3 (2000): 471-480.
+ - [3] Chen, Song Xi. "Probability density function estimation using gamma kernels." _Annals of the Institute of Statistical Mathematics_ 52, no. 3 (2000): 471-480.
 
  - [4] W. Hardle and J. S. Marron (1991). Bootstrap Simultaneous Error Bars for Nonparametric Regression. _The Annals of Statistics_. Vol. 19, No. 2 (Jun., 1991), pp. 778-796
 
