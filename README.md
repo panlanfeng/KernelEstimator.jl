@@ -1,9 +1,9 @@
 # Nonparametric
-The Julia package for nonparametric density estimate and regression. Currently includes univariate kernel density estimate, local constant regression (Nadaraya-watson estimator) and local linear regression. The Bootstrap confidence band [4] is provided for both of the two regression functions. The previous support for multivariate density estimation and regression are temporarily removed because of the low efficiency.
+The Julia package for nonparametric density estimate and regression. Currently includes univariate kernel density estimate, local constant regression (Nadaraya-watson estimator) and local linear regression. Can also compute the Bootstrap confidence band [4] for the regression estimator. The previous support for multivariate density estimation and regression are temporarily removed because of the low efficiency.
 
-This package provides Gamma and Beta kernel to deal with bounded density estimation and regression problem. These two kernels are free of boundary bias for one side bounded and two sides bounded problems respectively, see [2, 3]. In particular, least square cross validation (LSCV) bandwidth selection functions are implemented. The bandwidth selection for these kernels is hard. Numeric integration is used here so it may be slow for large datasets.
+This package provides Gamma and Beta kernel to deal with bounded density estimation and regression problem. These two kernels are free of boundary bias for one side bounded and two sides bounded problems respectively, see [2, 3]. In particular, least square cross validation (LSCV) bandwidth selection functions are implemented. The convolution of these two kernels have no closed form and numeric integration is used here. So it can be slow for large datasets.
 
-Bandwidth selection is critical in kernel estimation. But no Julia packages provide reliable bandwidth selection function (up to my knowledge on Nov 12, 2014). LSCV is always recommended for kernel density estimation. Likelihood cross validation is provided but should be avoided because of known drawbacks. For regression problem, the bandwidth of local constant regression is selected using LSCV while that for local linear regression is chosen by AIC [6].
+Bandwidth selection is critical in kernel estimation. But no Julia packages provide reliable bandwidth selection function (before Nov 12, 2014). Several bandwidth selction approaches are provided in this package. LSCV is always recommended for kernel density estimation. Likelihood cross validation is provided but should be avoided because of known drawbacks. For regression problem, the bandwidth of local constant regression is selected using LSCV while that for local linear regression is chosen by AIC [6].
 
 
 [![Build Status](https://travis-ci.org/panlanfeng/Nonparametric.jl.png)](https://travis-ci.org/panlanfeng/Nonparametric.jl)
@@ -11,31 +11,31 @@ Bandwidth selection is critical in kernel estimation. But no Julia packages prov
 ## Functions
 This package provides the following functions:
 
- - `kde(xdata::RealVector, xeval::Real or RealVector, kernel::Function, h::Real)`,  kernel density estimation
+ - `kde(xdata::RealVector, xeval::Real or RealVector, kernel::Function, h::Real)`, kernel density estimation
 
- - `kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)`, the easy function for kernel density estimation
+ - `kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)`, the easy entrance for kernel density estimation
 
  - `lp0(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlp0(xdata,ydata,kernel))`, local constant regression (or Nadaraya-Watson)
 
  - `lp1(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlp0(xdata,ydata,kernel))`,  local linear regression
 
- - `npr(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata,reg::Function=LP1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf) `, the easy function for regression
+ - `npr(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata,reg::Function=LP1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf) `, the easy entrance for regression
 
- - `bwnormal(xdata::Vector)`, bandwidth selection for density estimate by rule of thumb
+ - `bwnormal(xdata::Vector)`, bandwidth selection for density estimate by referencing to normal distribution
 
- - `bwlscv(xdata::RealVector, kernel::Function)`, bandwidthselection for density estiamte by least square cross validation
+ - `bwlscv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estiamte by least square cross validation
 
-  - `bwlcv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estiamte by likelihood cross validation
+ - `bwlcv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estiamte by likelihood cross validation
 
- - `bwlp0(xdata, ydata::Vector, kernel)` select bandwidth for local constant regression using LSCV
+ - `bwlp0(xdata, ydata::Vector, kernel)`, bandwidth selection for local constant regression using LSCV
 
- - `bwlp1(xdata, ydata::Vector, kernel)` select bandwidth for local linear regression using corrected AIC. See reference [6].
+ - `bwlp1(xdata, ydata::Vector, kernel)`, bandwidth selection for local linear regression using corrected AIC. See reference [6]
 
  - `bootstrapCB(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, B::Int64=500, reg::Function=lp1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)` compute 95% wild bootstrap confidence band at `xeval` for `lp0` and `lp1`
 
 
 
-In the above functions,
+The meaning of arguments:
 
  - `xeval` is the point(s) where the density or fitted value is calculated
 
@@ -43,13 +43,13 @@ In the above functions,
 
  - `ydata` is the response vector y; should have same length with `xdata`
 
- - `reg` is the regression function `LP0` or `LP1`
+ - `reg` is the regression function, `LP0` or `LP1`
 
  - `kernel` defaults to be `gaussiankernel`; should be a function
 
- - `h` is the bandwidth, should be a real scalar
+ - `h` is the bandwidth, should be a real scalar; If negative, the default bandwidth selection method will be used to find the bandwidth and replace it
 
- - `lb`, 'ub` are the boundary for x. Must be provide if you want to use Beta or Gamma kernel
+ - `lb`, `ub` are the boundary for x. Must provide if use Beta or Gamma kernel
 
 
 ##Demos
@@ -74,14 +74,11 @@ In the above functions,
 
         cb=bootstrapCB(x, y, xeval=xeval)
         using Gadfly
-        plot(layer(x=x, y=y, Geom.point), layer(x=xeval, y=yfit1, Geom.line, Theme(default_color=color("black"))), layer(x=xeval, y=cb[1,:], Geom.line, Theme(default_color=color("red"))), layer(x=xeval, y=cb[2,:], Geom.line, Theme(default_color=color("red"))))
+        plot(layer(x=x, y=y, Geom.point), layer(x=xeval, y=yfit1, Geom.line, Theme(default_color=color("black"))),
+          layer(x=xeval, y=cb[1,:], Geom.line, Theme(default_color=color("red"))),
+          layer(x=xeval, y=cb[2,:], Geom.line, Theme(default_color=color("red"))))
 
 
-##To be done
-
- - Implement multivariate version of kde and local regression
-
- - Add Gamma and Beta kernel which are useful to remove boundary biase
 
 
 ##Reference

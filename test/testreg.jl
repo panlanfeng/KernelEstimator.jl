@@ -35,5 +35,19 @@ yfit1=npr(x, y, xeval=xeval, reg=lp1)
 cb=bootstrapCB(x, y, xeval=xeval)
 
 
+###Bounded kernel density
+
+x = rand(Beta(4,2), 500) * 10
+xeval = linspace(0, 10, 100)
+den=kerneldensity(x, xeval=xeval, kernel=betakernel, lb=0.0,ub=10.0)
+#plot(layer(x=xeval, y=pdf(Beta(4,2), xeval/10), Geom.line), layer(x=xeval, y=den, Geom.line, Theme(default_color=color("black"))))
+
+##Bounded local regression
+y=2 .* x.^2 + x.*rand(Normal(0, 5), 500)
+yfit0=npr(x, y, xeval=xeval, reg=lp0, kernel=betakernel,lb=0.0, ub=10.0)
+yfit1=npr(x, y, xeval=xeval, reg=lp1, kernel=betakernel, lb=0.0,ub=10.0)
+cb=bootstrapCB(x, y, xeval=xeval,reg=lp1, kernel=betakernel, lb=0.0,ub=10.0)
+#plot(layer(x=x, y=y, Geom.point), layer(x=xeval, y=yfit1, Geom.line, Theme(default_color=color("black"))))
+
 # using Gadfly
 # plot(layer(x=x, y=y, Geom.point), layer(x=xeval, y=yfit1, Geom.line, Theme(default_color=color("black"))), layer(x=xeval, y=cb[1,:], Geom.line, Theme(default_color=color("red"))), layer(x=xeval, y=cb[2,:], Geom.line, Theme(default_color=color("red"))))

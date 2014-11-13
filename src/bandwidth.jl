@@ -48,7 +48,7 @@ end
 #     pquadrature(x->begin gammakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, gammakernel, h, w, n)
 # end
 function Jh(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
-    pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, kernel, h, w, n)
+    pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
 
 #Least Squares cross validation for Gaussian Kernel
@@ -58,7 +58,7 @@ function bwlscv(xdata::RealVector, kernel::Function)
     n=length(xdata)
     h0=bwnormal(xdata)
     if kernel == gaussiankernel
-        return Optim.optimize(h -> Jh(xdata, h, n), 0.01*h0, 10*h0, iterations=100, abs_tol=h0/n).minimum
+        return Optim.optimize(h -> Jh(xdata, h, n), 0.01*h0, 10*h0, iterations=200, abs_tol=h0/n).minimum
     end
 
     xlb, xub = extrema(xdata)
@@ -73,7 +73,7 @@ function bwlscv(xdata::RealVector, kernel::Function)
     elseif kernel == gammakernel
         xlb = 0.0
     end
-    return Optim.optimize(h -> Jh(xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=100,abs_tol=h0/n^2).minimum
+    return Optim.optimize(h -> Jh(xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
 end
 
 # likelihood cross validation for beta and gamma kernel
@@ -102,7 +102,7 @@ function bwlcv(xdata::RealVector, kernel::Function)
     if kernel==betakernel
         hub = 0.25
     end
-    return Optim.optimize(h->lcv(xdata,kernel,h,w,n), hlb, hub, iterations=100,abs_tol=h0/n^2).minimum
+    return Optim.optimize(h->lcv(xdata,kernel,h,w,n), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
 end
 
 
