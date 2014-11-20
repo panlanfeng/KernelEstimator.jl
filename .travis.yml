@@ -9,6 +9,6 @@ before_install:
   - sudo apt-get update -qq -y
   - sudo apt-get install libpcre3-dev julia -y
 script:
-  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("Nonparametric"))`); Pkg.pin("Nonparametric"); Pkg.resolve()'
-  - julia -e 'using Nonparametric; @assert isdefined(:Nonparametric); @assert typeof(Nonparametric) === Module'
+  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("KernelEstimator"))`); Pkg.pin("KernelEstimator"); Pkg.resolve()'
+  - julia -e 'using KernelEstimator; @assert isdefined(:KernelEstimator); @assert typeof(KernelEstimator) === Module'
   - julia ./run_tests.jl
