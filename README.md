@@ -1,9 +1,9 @@
-# Nonparametric
+# KernelEstimator 
 
-[![Build Status](https://travis-ci.org/panlanfeng/Nonparametric.jl.png)](https://travis-ci.org/panlanfeng/Nonparametric.jl)
+[![Build Status](https://travis-ci.org/panlanfeng/KernelEstimator.jl.png)](https://travis-ci.org/panlanfeng/KernelEstimator.jl)
 
 
-The Julia package for nonparametric density estimate and regression. Currently includes univariate kernel density estimate, local constant regression (Nadaraya-watson estimator) and local linear regression. Can also compute the Bootstrap confidence band [4] for the regression estimator. The previous support for multivariate density estimation and regression are temporarily removed because of the low efficiency.
+The Julia package for nonparametric kernel density estimate and regression. This pacakage is renamed from `Nonparametric` to `KernelEstimator` on Nov 20, 2014. This package currently includes univariate kernel density estimate, local constant regression (Nadaraya-watson estimator) and local linear regression. Can also compute the Bootstrap confidence band [4] for the regression estimator. The previous support for multivariate density estimation and regression are temporarily removed because of the low efficiency.
 
 This package provides Gamma and Beta kernel to deal with bounded density estimation and regression problem. These two kernels are free of boundary bias for one side bounded and two sides bounded problems respectively, see [2, 3]. In particular, least square cross validation (LSCV) bandwidth selection functions are implemented. The convolution of these two kernels have no closed form and numeric integration is used here. So it can be slow for large datasets.
 

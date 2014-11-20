@@ -5,7 +5,7 @@
 # require("StatsBase")
 
 
-module Nonparametric
+module KernelEstimator 
 
 using Distributions
 # using Cubature

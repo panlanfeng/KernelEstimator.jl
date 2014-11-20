@@ -1,4 +1,4 @@
-The Nonparametric.jl package is licensed under the MIT "Expat" License:
+The KernelEstimator.jl package is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2013: Lanfeng Pan.
 >
