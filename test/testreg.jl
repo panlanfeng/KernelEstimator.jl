@@ -8,7 +8,7 @@ h = bwlscv(x, gaussiankernel)
 den=kerneldensity(x, xeval=xeval)
 @test all(den .>= 0)
 
-y=2 .* x.^2 
+y=2 .* x.^2 .+ rand(Normal(0,5),500)
 b0, b1 = linreg(x, y)
 regfit = b0 .+ b1 .* x
 yfit0=lp0(x, y, xeval=x)
@@ -26,7 +26,7 @@ yfit1=npr(x, y, xeval=x, reg=lp1)
 #confidence band
 yfit1=npr(x, y, xeval=xeval, reg=lp1)
 cb=bootstrapCB(x, y, xeval=xeval)
-#@test mean(cb[2,:] .<= yfit1 .<= cb[1,:]) > .9
+@test mean(vec(cb[1,:]) .<= yfit1 .<= vec(cb[2,:])) > .9
 
 
 
@@ -53,6 +53,6 @@ yfit1=npr(x, y, xeval=x, reg=lp1, kernel=betakernel, lb=0.0,ub=10.0)
 
 yfit1=npr(x, y, xeval=xeval, reg=lp1, kernel=betakernel, lb=0.0,ub=10.0)
 cb=bootstrapCB(x, y, xeval=xeval,reg=lp1, kernel=betakernel, lb=0.0,ub=10.0)
-#@test mean(cb[2,:] .<= yfit1 .<= cb[1,:]) > .9
+@test mean(vec(cb[1,:]) .<= yfit1 .<= vec(cb[2,:])) > .9
 
 

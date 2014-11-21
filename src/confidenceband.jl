@@ -1,6 +1,6 @@
 #Bootstrap confidence band for univariate nonparametric regression
 function bootstrapCB(xdata::RealVector, ydata::RealVector;
-    xeval::RealVector=xdata, B::Int64=500, reg::Function=lp1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
+    xeval::RealVector=xdata, B::Int64=500, reg::Function=lp1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf, alpha::Real=0.05)
 
     n=length(xdata)
     y_matrix=zeros(B, length(xeval))
@@ -13,18 +13,19 @@ function bootstrapCB(xdata::RealVector, ydata::RealVector;
 
 
     yhat=reg(xdata, ydata, xeval=xdata, h=h, kernel=kernel)
-    mhat=copy(yhat)
+	#in the wild bootstrap setting, new error terms are generated from a distribution with 0 mean, equal second and third moment
+	#usually work well unless the error terms are extremly small, then the cb may not cover prediction.
     e = ydata .- yhat
-    coef=[-1,0,2]
+    coef=[(1-sqrt(5))/2,(1+sqrt(5))/2]
 
     for b in 1:B
-        boot_coef=coef[rand(Categorical([1/3, 1/2, 1/6]), n)]
+        boot_coef=coef[rand(Categorical([(5+sqrt(5))/10, 1-(5+sqrt(5))/10]), n)]
         boot_e=boot_coef .* e
-        boot_y=mhat .+ boot_e
+        boot_y=yhat .+ boot_e
         y_matrix[b, :]=reg(xdata, boot_y, xeval=xeval, h=h, kernel=kernel)
     end
     for i in 1:length(xeval)
-        cb[:, i]=quantile(y_matrix[:, i], [.975, .025])
+        cb[:, i]=quantile(y_matrix[:, i], [alpha/2, 1-alpha/2])
     end
     cb
 end
