@@ -3,15 +3,15 @@
 [![Build Status](https://travis-ci.org/panlanfeng/KernelEstimator.jl.png)](https://travis-ci.org/panlanfeng/KernelEstimator.jl)
 
 
-The Julia package for nonparametric kernel density estimate and regression. This pacakage is renamed from `Nonparametric` to `KernelEstimator` on Nov 20, 2014. This package currently includes univariate kernel density estimate, local constant regression (Nadaraya-watson estimator) and local linear regression. Can also compute the Bootstrap confidence band [4] for the regression estimator. 
+The Julia package for nonparametric kernel density estimate and regression. This package is renamed from `Nonparametric` to `KernelEstimator` on Nov 20, 2014. This package currently includes univariate kernel density estimate, local constant regression (Nadaraya-Watson estimator) and local linear regression. Can also compute the Bootstrap confidence band [4] for the regression estimator. 
 
 This package provides Gamma and Beta kernel to deal with bounded density estimation and regression problem. These two kernels are free of boundary bias for one side and two sides bounded problems respectively, see [2, 3]. In particular, least square cross validation (LSCV) bandwidth selection functions are implemented. The convolution of these two kernels have no closed form and numeric integration is used here.
 
-Bandwidth selection is critical in kernel estimation. Several bandwidth selction methods are provided in this package. LSCV is recommended for kernel density estimation. Likelihood cross validation is provided but should be avoided because of known drawbacks. For regression problem, the bandwidth of local constant regression is selected using LSCV while that for local linear regression is chosen by AIC [6].
+Bandwidth selection is critical in kernel estimation. Several bandwidth selection methods are provided in this package. LSCV is recommended for kernel density estimation. Likelihood cross validation is provided but should be avoided because of known drawbacks. For regression problem, the bandwidth of local constant regression is selected using LSCV while that for local linear regression is chosen by AIC [6].
 
 To install this package in Julia, use
 
-		Pkg.add("KernelEsitmator")
+		Pkg.add("KernelEstimator")
 
 This package calculate densities via direct approach, i.e. adding kernel functions together. To add new kernel, you need to define a new function takes the same arguments as `gaussiankernel` and output the kernel weights at given point. If no bandwidth selection function is provide for that kernel, lscv with numeric integration will be used. 
 
@@ -30,9 +30,9 @@ This package provides the following functions:
 
  - `bwnormal(xdata::Vector)`, bandwidth selection for density estimate by referencing to normal distribution
 
- - `bwlscv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estiamte by least square cross validation
+ - `bwlscv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estimate by least square cross validation
 
- - `bwlcv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estiamte by likelihood cross validation
+ - `bwlcv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estimate by likelihood cross validation
 
  - `bwlp0(xdata, ydata::Vector, kernel)`, bandwidth selection for local constant regression using LSCV
 
