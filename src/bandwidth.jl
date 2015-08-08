@@ -198,9 +198,9 @@ function AIClp1(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real,
           kernel(xdata[ind], xdata, h, w, n)
           s0 = sum(w)
           s1 = s0*xdata[ind] - wsum(w, xdata)
-          s2 = wsumsqdiff(w, xdata, xdata[ind])
+          s2 = wsumsqdiff(w, xdata, xdata[ind], n)
           sy0 = wsum(w, ydata)
-          sy1 = NumericExtensions.wsum(w, YXdiff(), xdata, xdata[ind], ydata)
+          sy1 = wsumyxdiff(w, xdata, xdata[ind], ydata, n)
           tmp+=abs2((s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1) - ydata[ind])
           traceH += s0*w[ind]/(s2 * s0 - s1 * s1)
           ind += 1
@@ -257,4 +257,3 @@ end
 #   optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1 / n
 
 # end
-

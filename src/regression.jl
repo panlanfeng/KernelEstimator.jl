@@ -25,8 +25,22 @@ end
 yxdiff{T<:FloatingPoint}(xi::T, xeval::T, y::T)=y*(xeval - xi)
 yxdiff{T<:Real}(xi::T, xeval::T, y::T)=yxdiff(float(xi), float(xeval), float(y))
 yxdiff(xi::Real, xeval::Real, y::Real)=yxdiff(promote(xi, xeval, y)...)
-type YXdiff <: Functor{3} end
-NumericExtensions.evaluate(::YXdiff, xi, xeval, y) = yxdiff(xi, xeval, y)
+#type YXdiff <: Functor{3} end
+#NumericExtensions.evaluate(::YXdiff, xi, xeval, y) = yxdiff(xi, xeval, y)
+function wsumsqdiff(w::RealVector, xdata::RealVector, xeval::Real, n::Int)
+    res = 0.0
+    for i in 1:n
+        @inbounds res += w[i]*(xdata[i]-xeval).^2
+    end
+    res
+end
+function wsumyxdiff(w::RealVector, xdata::RealVector, xeval::Real, ydata::RealVector, n::Int)
+    res = 0.0
+    for i in 1:n
+        @inbounds res += w[i]*ydata[i]*(xeval-xdata[i])
+    end
+    res
+end
 
 ##univariate local linear
 function lp1(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function=gaussiankernel, h::Real=bwlp0(xdata,ydata,kernel))
@@ -36,9 +50,9 @@ function lp1(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function
     kernel(xeval, xdata, h, w, n)
     s0 = sum(w)
     s1 = s0*xeval - wsum(w, xdata)
-    s2 = wsumsqdiff(w, xdata, xeval)
+    s2 = wsumsqdiff(w, xdata, xeval, n)
     sy0 = wsum(w, ydata)
-    sy1 = NumericExtensions.wsum(w, YXdiff(), xdata, xeval, ydata)
+    sy1 = wsumyxdiff(w, xdata, xeval, ydata, n)
     (s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1)
 end
 function lp1(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlp1(xdata, ydata, kernel))
@@ -50,9 +64,9 @@ function lp1(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kern
         kernel(xeval[i], xdata, h, w, n)
         s0 = sum(w)
         s1 = s0*xeval[i] - wsum(w, xdata)
-        s2 = wsumsqdiff(w, xdata, xeval[i])
+        s2 = wsumsqdiff(w, xdata, xeval[i], n)
         sy0 = wsum(w, ydata)
-        sy1 = NumericExtensions.wsum(w, YXdiff(), xdata, xeval[i], ydata)
+        sy1 = wsumyxdiff(w, xdata, xeval[i], ydata, n)
         pre[i] = (s2 * sy0 - s1 * sy1) /(s2 * s0 - s1 * s1)
     end
     pre
@@ -132,5 +146,3 @@ end
 #   end
 #   den
 # end
-
-

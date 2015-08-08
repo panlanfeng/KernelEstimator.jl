@@ -10,10 +10,11 @@ module KernelEstimator
 using Distributions
 # using Cubature
 using Optim
-using NumericExtensions
+using Yeppp
 using StatsBase
 using Cubature
 import StatsBase: RealVector, RealMatrix
+
  Base.@math_const invsqrt2pi 0.398942280401432677939946 big(1.)/sqrt(big(2.)*π)
 
 

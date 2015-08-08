@@ -1,6 +1,17 @@
 rhoxb{T<:FloatingPoint}(x::T, b::T) = 2*b*b + 2.5 - sqrt(4*b^4 + 6*b*b+2.25 - x*x - x/b)
 rhoxb{T<:Real}(x::T, b::T) = rhoxb(float(x), float(b))
 rhoxb(x::Real, b::Real) = rhoxb(promote(x, b)...)
+function multiply!(x::RealVector, y::Real)
+    for i in 1:length(x)
+        x[i] = x[i]*y
+    end
+end
+function divide!(x::RealVector, y::Real)
+    for i in 1:length(x)
+        x[i] = x[i]/y
+    end
+end
+
 function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     a = x / h - 1
     b = (1 - x) / h - 1
@@ -189,5 +200,3 @@ end
 # #     tmp
 # # end
 # # Epanechnikov=KernelType(EKernel, EKernel2)
-
-
