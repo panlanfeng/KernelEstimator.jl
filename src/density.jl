@@ -10,13 +10,7 @@ function kde(xdata::RealVector, xeval::RealVector, kernel::Function, h::Real)
     end
     return den
 end
-function kde(xdata::RealVector, xeval::Real, kernel::Function, h::Real)
-    h > 0.0 || error("h < 0!")
-    n = length(xdata)
-    w = zeros(n)
-    kernel(xeval, xdata, h, w, n)
-    return mean(w)
-end
+kde(xdata::RealVector, xeval::Real, kernel::Function, h::Real) = kde(xdaa, [xeval;], kernel, h)
 
 function kde(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
 

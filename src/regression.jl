@@ -1,5 +1,4 @@
 #univariate nadaraya-watson estimate
-lp0(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlp0(xdata,ydata,kernel)) = lp0(xdata, ydata, xeval = [xeval], kernel=kernel, h = h)
 
 function lp0(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlp0(xdata,ydata,kernel))
 
@@ -13,6 +12,7 @@ function lp0(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kern
     end
     pre
 end
+lp0(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlp0(xdata,ydata,kernel)) = lp0(xdata, ydata, xeval = [xeval;], kernel=kernel, h = h)
 
 function wsumsqdiff(w::RealVector, xdata::RealVector, xeval::Real, n::Int)
     res = 0.0
@@ -46,7 +46,7 @@ function lp1(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kern
     end
     pre
 end
-lp1(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlp1(xdata,ydata,kernel)) = lp1(xdata, ydata, xeval=[xeval], kernel=kernel, h=h)
+lp1(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlp1(xdata,ydata,kernel)) = lp1(xdata, ydata, xeval=[xeval;], kernel=kernel, h=h)
 
 
 

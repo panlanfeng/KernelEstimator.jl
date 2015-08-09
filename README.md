@@ -96,7 +96,7 @@ The meaning of arguments:
 
  - Local regression
  
-		 y=2 .* x.^2 + rand(Normal(), 500)
+		y=2 .* x.^2 + rand(Normal(), 500)
 		yfit0=lp0(x, y, xeval=xeval)
 		yfit1=lp1(x, y, xeval=xeval)
 		yfit0=npr(x, y, xeval=xeval, reg=lp0)
