@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/panlanfeng/KernelEstimator.jl.png)](https://travis-ci.org/panlanfeng/KernelEstimator.jl)
 
 
-The Julia package for nonparametric kernel density estimate and regression. This package is renamed from `Nonparametric` to `KernelEstimator` on Nov 20, 2014. This package currently includes univariate kernel density estimate, local constant regression (Nadaraya-Watson estimator) and local linear regression. Can also compute the Bootstrap confidence band [4] for the regression estimator. 
+The Julia package for nonparametric kernel density estimate and regression. This package currently includes univariate kernel density estimate, local constant regression (Nadaraya-Watson regression) and local linear regression. It can also compute the Bootstrap confidence band [4]. 
 
 This package provides Gamma and Beta kernel to deal with bounded density estimation and regression problem. These two kernels are free of boundary bias for one side and two sides bounded problems respectively, see [2, 3]. In particular, least square cross validation (LSCV) bandwidth selection functions are implemented. The convolution of these two kernels have no closed form and numeric integration is used here.
 
@@ -101,8 +101,3 @@ The meaning of arguments:
  - [5] W.Hardle and E. Mammen (1993). Comparing Nonparametric Versus Parametric Regression Fits. _The Annals of Statistics_. Vol. 21, No. 4 (Dec., 1993), pp. 1926-1947
 
  -  [6] Clifford M. Hurvich, Jeffrey S. Simonoff and Chih-Ling Tsai (1998). Smoothing Parameter Selection in Nonparametric Regression Using an Improved Akaike Information Criterion. _Journal of the Royal Statistical Society. Series B (Statistical Methodology)_, Vol. 60, No. 2 (1998), pp. 271-293
-
-
-
-
-

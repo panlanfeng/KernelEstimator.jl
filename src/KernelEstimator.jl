@@ -10,7 +10,7 @@ module KernelEstimator
 using Distributions
 # using Cubature
 using Optim
-using Yeppp
+#using Yeppp
 using StatsBase
 using Cubature
 import StatsBase: RealVector, RealMatrix
