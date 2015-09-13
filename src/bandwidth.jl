@@ -10,9 +10,9 @@ function midrange(x::RealVector)
 end
 
 # J(h)=∑ᵢⱼK'((xᵢ - xⱼ)/h) /(n²h) + 2K(0)/(nh) =
-# where K'(u) = invsqrt2pi(exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u))
-#J(h) = invsqrt2pi/(n²h) ∑ᵢⱼ (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + 2 * invsqrt2pi /nh
-#J(h) = 2*invsqrt2pi/(n²h) ∑{i<j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2pi/sqrt(2)nh
+# where K'(u) = invsqrt2π(exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u))
+#J(h) = invsqrt2π/(n²h) ∑ᵢⱼ (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + 2 * invsqrt2π/nh
+#J(h) = 2*invsqrt2π/(n²h) ∑{i<j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2π/sqrt(2)nh
 #For normal kernel
 function Jh(xdata::RealVector, h::Real, n::Int)
     tmp = 0.0

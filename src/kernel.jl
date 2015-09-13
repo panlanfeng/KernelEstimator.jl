@@ -64,7 +64,7 @@ function gaussiankernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
         w[ind] = exp(-0.5*abs2((x - xdata[ind])/h))
         ind += 1
     end
-    multiply!(w, invsqrt2pi / h)
+    multiply!(w, invsqrt2π / h)
     nothing
 end
 
@@ -82,7 +82,7 @@ end
 
 # #univariate normal kernel
 
-# gaussiankernel{T<:FloatingPoint}(xi::T, x::T, h::T)=exp(-0.5*abs2((x - xi)/h)) / h * invsqrt2pi
+# gaussiankernel{T<:FloatingPoint}(xi::T, x::T, h::T)=exp(-0.5*abs2((x - xi)/h)) / h * invsqrt2π
 # gaussiankernel{T<:Real}(xi::T, x::T, h::T) = gkernel(float(xi), float(x),float(h))
 # gaussiankernel(xi::Real, x::Real, h::Real)=gkernel(promote(xi, x, h)...)
 # # type Gkernel <: Functor{3} end
