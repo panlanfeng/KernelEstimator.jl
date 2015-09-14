@@ -1,10 +1,15 @@
 language: julia
 os:
-  - linux
+    - osx 
+    - linux
 julia:
-  - release
-  - nightly
+    - release
+    - nightly
 notifications:
-  email: false
+    email: false
 script:
-  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("KernelEstimator"); Pkg.test("KernelEstimator"; coverage=true)'
+    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+    - julia -e 'Pkg.clone(pwd()); Pkg.build("KernelEstimator"); Pkg.test("KernelEstimator"; coverage=true)';
+after_success:
+    - julia -e 'cd(Pkg.dir("KernelEstimator")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
+
