@@ -49,7 +49,7 @@ function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     ind_end = 1+n
     @inbounds while ind < ind_end
         xi_b = xdata[ind] / h
-        w[ind] = xi_b^(rhob-1.0) * exp(-xi_b)
+        w[ind] = exp(-xi_b+(rhob-1.0)*log(xi_b))
         ind += 1
     end
     multiply!(w, 1/(h*gamma(rhob)))
