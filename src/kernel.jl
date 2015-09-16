@@ -12,6 +12,14 @@ function divide!(x::RealVector, y::Real)
     end
 end
 
+function add!(x::Vector{Float64}, y::Float64, n::Int64=length(x))
+   for i in 1:n
+       @inbounds x[i] = x[i] + y
+   end
+   nothing
+end
+
+
 function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     a = x / h - 1
     b = (1 - x) / h - 1
@@ -27,13 +35,13 @@ function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     ind = 1
     ind_end = 1+n
     @inbounds while ind < ind_end
-        w[ind] = xdata[ind] ^ a * (1 - xdata[ind]) ^ b
+        w[ind] = a * log(xdata[ind]) + b * log(1 - xdata[ind]) #xdata[ind] ^ a * (1 - xdata[ind]) ^ b
         ind += 1
     end
-    multiply!(w, 1/beta(a+1, b+1))
+    add!(w, -lbeta(a+1, b+1))
+    Yeppp.exp!(w, w)
     nothing
 end
-
 
 #xdata should be positive, or domain error will be raised.
 function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
@@ -49,10 +57,11 @@ function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     ind_end = 1+n
     @inbounds while ind < ind_end
         xi_b = xdata[ind] / h
-        w[ind] = exp(-xi_b+(rhob-1.0)*log(xi_b))
+        w[ind] = -xi_b+(rhob-1.0)*log(xi_b) #StatsFuns.gammapdf(rhob, h, xdata[ind])
         ind += 1
     end
-    multiply!(w, 1/(h*gamma(rhob)))
+    add!(w, -log(h) - lgamma(rhob))
+    Yeppp.exp!(w, w)
     nothing
 end
 
@@ -61,13 +70,14 @@ function gaussiankernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     ind = 1
     ind_end = 1+n
     @inbounds while ind < ind_end
-        w[ind] = exp(-0.5*abs2((x - xdata[ind])/h))
+        w[ind] = -0.5*abs2((x - xdata[ind])/h)
         ind += 1
     end
-    multiply!(w, invsqrt2π / h)
+    #multiply!(w, invsqrt2π / h)
+    add!(w, -log(h) - log(2π)/2)
+    Yeppp.exp!(w, w)
     nothing
 end
-
 function ekernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     ind = 1
     ind_end = 1+n
