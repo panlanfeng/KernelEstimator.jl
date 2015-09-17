@@ -104,53 +104,29 @@ kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Rea
 # # bkde(xdata::RealVector, lb::Real, ub::Real; h::Real=bwcv(xdata, kernel))=bkde(xdata,xdata,lb,ub,h=h)
 
 
-# # #MultiVariate kernel density
-# # function KernelDensity(xeval::Vector{Float64}, xdata::Matrix{Float64},
-# #   kernel::KernelType=Gaussian, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
 
 
-# #   if any(h .<= 0)
-# #     error("Bandwidth should be positive")
-# #   end
-# #   (n, p)=size(xdata)
-# #   if length(h) == 1 && p==1
-# #     return KernelDensity(xeval, xdata, kernel, h)
-# #   end
-
-# #   if length(xeval) != p || length(h) != p
-# #     error("xeval should have same dimension as xdata")
-# #   end
-
-
-# #   s0=0.0
-# #   xi=zeros(p)
-# #   for i = 1:n
-# #     for j=1:p
-# #       xi[j]=xdata[i,j]
-# #     end
-# #     s0 = s0 + kernel.Density(xeval, xi, h)
-# #   end
-# #   s0 / length(xdata)
-# # end
-
-# # function KernelDensity(xeval::Matrix{Float64}, xdata::Matrix{Float64},
-# #   kernel::KernelType=Gaussian, h::Vector{Float64}=BandwidthLSCV(xdata,kernel))
-
-# #   if any(h .<= 0)
-# #     error("xeval should have same dimension as xdata")
-# #   end
-# #   (m, p)=size(xeval)
-# #   if length(h) != p || size(xdata)[2] != p
-# #     error("xeval should have same dimension as xdata")
-# #   end
-# #   xi_eval=zeros(p)
-# #   den=zeros(m)
-# #   for i=1:m
-# #     for j=1:p
-# #       xi_eval[j]=xeval[i, j]
-# #     end
-
-# #     den[i]=KernelDensity(xi_eval, xdata, kernel, h)
-# #   end
-# #   den
-# # end
+function kde(xdata::RealMatrix, xeval::RealMatrix, 
+    kernel::Array{Function, 1}, h::RealVector)
+    
+    if any(h .<= 0)
+        error("h < 0!")
+    end
+    m, p=size(xeval)
+    n, p1 = size(xdata)
+    if length(h) != p || p1 != p
+        error("xeval and h should have same dimension as xdata")
+    end
+    den=zeros(m)
+    for i=1:m
+        wtmp = zeros(n)
+        w = ones(n)
+        for j=1:p
+            kernel[j](xeval[i, j], xdata[:, j], h[j], wtmp, n)
+            w .*= wtmp
+        end
+        den[i] = mean(w)
+    end
+    den
+end
+kde(xdata::RealMatrix, xeval::RealMatrix, kernel::Function, h::RealVector) = kde(xdata, xeval, [kernel for i in 1:size(xdata)[2]], h)

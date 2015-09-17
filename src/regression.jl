@@ -89,36 +89,25 @@ function npr(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata,
 end
 
 
-# #multi-variate nadaraya-watson
-# function LP0(xeval::Vector{Float64}, xdata::Matrix{Float64}, ydata::Vector{Float64}, kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCVReg(xdata,ydata,LP0,kernel))
-
-#   (n,p)=size(xdata)
-#   if length(xeval) != p || length(h) !=p
-#     error("xeval, xdata and h should have same dimension!")
-#   end
-
-#   tmp=zeros(n)
-#   for i in 1:n
-#     tmp[i]=prod([GaussianKernel(xeval[j], xdata[i,j],h[j])::Float64 for j in 1:p])
-#   end
-
-#   s0 = sum(tmp)
-#   sy0 = sum(tmp .* ydata)
-#   sy0 / s0
-# end
-
-# #
-# function LP0(xeval::Matrix{Float64}, xdata::Matrix{Float64},
-#   ydata::Vector{Float64}, kernel::Function=GaussianKernel, h::Vector{Float64}=BandwidthLSCVReg(xdata,ydata,LP0,kernel))
-
-#   (m,p)=size(xeval)
-#   den=zeros(m)
-#   xi=zeros(p)
-#   for i=1:m
-#     for k in 1:p
-#       xi[k] = xeval[i,k]
-#     end
-#     den[i] = LP0(xi, xdata, ydata, kernel, h)::Float64
-#   end
-#   den
-# end
+# #multi-variate nadaraya-watson regression or local linear
+function lp0(xdata::RealMatrix, ydata::RealVector, h::RealVector; xeval::RealMatrix=xdata, kernel::Array{Function, 1}=[gaussiankernel for i in 1:size(xdata)[2]])
+    
+    m, p = size(xeval)
+    n, p1 = size(xdata)
+    if length(xeval) != p || length(h) !=p
+        error("xeval, xdata and h should have same dimension!")
+    end
+    pre=zeros(m)
+    
+    for i=1:m
+        w = ones(n)
+        wtmp = ones(n)
+        for j in 1:p
+            kernel[j](xeval[i, j], xdata[:, j], h[j], wtmp, n)
+            w .*= wtmp
+        end
+        pre[i] = wsum(w, ydata) / sum(w)
+    end
+    pre
+end
+lp0(xdata::RealMatrix, ydata::RealVector, h::RealVector; xeval::RealMatrix=xdata, kernel::Function=gaussiankernel) = lp0(xdata, ydata, h; xeval=xeval, kernel=[kernel for i in 1:size(xdata)[2]])

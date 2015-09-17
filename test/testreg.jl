@@ -26,7 +26,7 @@ yfit1=npr(x, y, xeval=x, reg=lp1)
 #confidence band
 yfit1=npr(x, y, xeval=xeval, reg=lp1)
 cb=bootstrapCB(x, y, xeval=xeval)
-@test mean(vec(cb[1,:]) .<= yfit1 .<= vec(cb[2,:])) > .9
+@test mean(vec(cb[1,:]) .<= yfit1 .<= vec(cb[2,:])) > .8
 
 
 

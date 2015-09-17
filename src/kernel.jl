@@ -43,6 +43,7 @@ function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     nothing
 end
 
+#f̂(x) = 1/n ∑ᵢ K(xᵢ;x /b+1, b )
 #xdata should be positive, or domain error will be raised.
 function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     rhob = x/h
