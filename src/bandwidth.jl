@@ -84,7 +84,7 @@ function lcv(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
 #     -mean(kde(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
     ind = 1
     ind_end = 1+n
-    ll = 1.0
+    ll = 0.0
     @inbounds while ind < ind_end
         kernel(xdata[ind], xdata, h, w, n)
         w[ind] = 0.0
@@ -105,6 +105,55 @@ function bwlcv(xdata::RealVector, kernel::Function)
     return Optim.optimize(h->lcv(xdata,kernel,h,w,n), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
 end
 
+function lcv(xdata::RealMatrix, kernel::Array{Function, 1}, h::RealVector, w::Vector, n::Int)
+#     -mean(kde(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
+    if any(h .<= 0.0)
+        return Inf
+    end
+    ind = 1
+    ind_end = 1+n
+    ll = 0.0
+    p = size(xdata)[2]
+    @inbounds while ind < ind_end
+        fill!(w, 1.0)
+        wtmp = ones(n)
+        for j in 1:p
+            kernel[j](xdata[ind, j], xdata[:, j], h[j], wtmp, n)
+            for k in 1:n
+                w[k] = w[k] * wtmp[k]
+            end
+        end
+        divide!(w, sum(w))
+
+        w[ind] = 0.0
+        ll += log(mean(w))
+        ind += 1
+    end
+    -ll
+end
+function bwlcv(xdata::RealMatrix, kernel::Array{Function, 1})
+    n, p = size(xdata)
+    w = ones(n)
+    h0 = zeros(p)
+    hlb = zeros(p)
+    hub = zeros(p)
+    for j in 1:p
+        if kernel[j] == gaussiankernel
+            h0[j] = bwnormal(xdata[:, j])
+            hlb[j] = 0.1*h0[j]
+            hub[j] = 10*h0[j]
+        elseif kernel[j] == betakernel
+            h0[j] = midrange(xdata[:, j])
+            hlb[j] = h0[j]/n
+            hub[j] = 0.25
+        elseif kernel[j] == gammakernel
+            h0[j] = midrange(xdata[:, j])
+            hlb[j] = h0[j]/n
+            hub[j] = h0[j]
+        end
+    end
+    Optim.optimize(h->lcv(xdata, kernel, h, w, n), h0).minimum
+end
 
 # #to be implemented
 # function bwkd(xdata::RealVector, kernel::Function)
@@ -239,7 +288,65 @@ function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Func
     end
 end
 
+
+
 # #leave-one-out LSCV for multivariate NW
+function lscvlp0(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1}, h::RealVector, w::Vector, n::Int)
+    if any(h .<= 0.0)
+        return Inf
+    end
+    tmp = 0.0
+    ind = 1
+    ind_end = 1+n
+    p=size(xdata)[2]
+    @inbounds while ind < ind_end
+        fill!(w, 1.0)
+        wtmp = ones(n)
+        for j in 1:p
+            kernel[j](xdata[ind, j], xdata[:, j], h[j], wtmp, n)
+            for k in 1:n
+                w[k] = w[k] * wtmp[k]
+            end
+        end
+        divide!(w, sum(w))
+        tmp += abs2((wsum(w, ydata) - ydata[ind])/(1-w[ind]))
+        ind += 1
+    end
+    tmp/n
+end
+
+function bwlp0(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1} = [gaussiankernel for i in 1:size(xdata)[2]])
+    n, p = size(xdata)
+    w = ones(n)
+    h0 = zeros(p)
+    hlb = zeros(p)
+    hub = zeros(p)
+    for j in 1:p
+        if kernel[j] == gaussiankernel
+            h0[j] = bwnormal(xdata[:, j])
+            hlb[j] = 0.1*h0[j]
+            hub[j] = 10*h0[j]
+        elseif kernel[j] == betakernel
+            h0[j] = midrange(xdata[:, j])
+            hlb[j] = h0[j]/n
+            hub[j] = 0.25
+        elseif kernel[j] == gammakernel
+            h0[j] = midrange(xdata[:, j])
+            hlb[j] = h0[j]/n
+            hub[j] = h0[j]
+        end
+    end
+    h_output=Optim.optimize(h->lscvlp0(xdata, ydata, kernel, h, w, n), h0).minimum
+    if any(h_output .<= 0.0)
+        for j in 1:p
+            if h_output[j] .<= 0.0
+                h_output[j] = 2.* h0[j]
+            end
+        end
+        h_output = Optim.optimize(h->lscvlp0(xdata, ydata, kernel, h, w, n), h_output).minimum
+    end
+    h_output
+end
 # function BandwidthLSCVReg(xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel)
 
 #   (n,p)=size(xdata)

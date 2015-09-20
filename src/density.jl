@@ -10,7 +10,7 @@ function kde(xdata::RealVector, xeval::RealVector, kernel::Function, h::Real)
     end
     return den
 end
-kde(xdata::RealVector, xeval::Real, kernel::Function, h::Real) = kde(xdaa, [xeval;], kernel, h)
+kde(xdata::RealVector, xeval::Real, kernel::Function, h::Real) = kde(xdata, [xeval;], kernel, h)
 
 function kde(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
 
@@ -106,8 +106,8 @@ kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Rea
 
 
 
-function kde(xdata::RealMatrix, xeval::RealMatrix, 
-    kernel::Array{Function, 1}, h::RealVector)
+function kde(xdata::RealMatrix; xeval::RealMatrix=xdata, 
+    kernel::Array{Function, 1}=[gaussiankernel for i in 1:size(xdata)[2]], h::RealVector=bwlcv(xdata, kernel))
     
     if any(h .<= 0)
         error("h < 0!")
@@ -123,10 +123,11 @@ function kde(xdata::RealMatrix, xeval::RealMatrix,
         w = ones(n)
         for j=1:p
             kernel[j](xeval[i, j], xdata[:, j], h[j], wtmp, n)
-            w .*= wtmp
+            for k in 1:n
+                w[k] = w[k] * wtmp[k]
+            end
         end
         den[i] = mean(w)
     end
     den
 end
-kde(xdata::RealMatrix, xeval::RealMatrix, kernel::Function, h::RealVector) = kde(xdata, xeval, [kernel for i in 1:size(xdata)[2]], h)

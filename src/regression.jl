@@ -90,12 +90,15 @@ end
 
 
 # #multi-variate nadaraya-watson regression or local linear
-function lp0(xdata::RealMatrix, ydata::RealVector, h::RealVector; xeval::RealMatrix=xdata, kernel::Array{Function, 1}=[gaussiankernel for i in 1:size(xdata)[2]])
+function lp0(xdata::RealMatrix, ydata::RealVector; kernel::Array{Function, 1}=[gaussiankernel for i in 1:size(xdata)[2]], xeval::RealMatrix=xdata,  h::RealVector=bwlp0(xdata, ydata, kernel))
     
     m, p = size(xeval)
     n, p1 = size(xdata)
-    if length(xeval) != p || length(h) !=p
+    if p1 != p || length(h) !=p
         error("xeval, xdata and h should have same dimension!")
+    end
+    if any(h.<=0.0)
+        error("Bandwidth should be positive")
     end
     pre=zeros(m)
     
@@ -104,10 +107,12 @@ function lp0(xdata::RealMatrix, ydata::RealVector, h::RealVector; xeval::RealMat
         wtmp = ones(n)
         for j in 1:p
             kernel[j](xeval[i, j], xdata[:, j], h[j], wtmp, n)
-            w .*= wtmp
+            for k in 1:n
+                w[k] = w[k] * wtmp[k]
+            end
         end
-        pre[i] = wsum(w, ydata) / sum(w)
+        divide!(w, sum(w))
+        pre[i] = wsum(w, ydata)
     end
     pre
 end
-lp0(xdata::RealMatrix, ydata::RealVector, h::RealVector; xeval::RealMatrix=xdata, kernel::Function=gaussiankernel) = lp0(xdata, ydata, h; xeval=xeval, kernel=[kernel for i in 1:size(xdata)[2]])
