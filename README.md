@@ -41,21 +41,21 @@ For kernel regression, you can use
 	
 or change the default by
 
-	npr(x, y, xeval=x, reg=lp1, kernel=betakernel,lb=0.0, ub=10.0)
+	npr(x, y, xeval=x, reg=locallinear, kernel=betakernel,lb=0.0, ub=10.0)
 	
-`reg` specifies the order of local polynomial regression. You can choose `lp0`, local constant regression or `lp1`, local linear regression. `lp1` has better theoretical properties in prediction `y` and is used by default but is more computing intensive. 
+`reg` specifies the order of local polynomial regression. You can choose `localconstant`, local constant regression or `locallinear`, local linear regression. `locallinear` has better theoretical properties in prediction `y` and is used by default but is more computing intensive. 
 
 There is also a function computing the bootstrap confidence interval for regression. 
 
-	bootstrapCB(x, y; xeval=x, B=500, reg=lp1, lb=-Inf, ub=Inf, kernel=gaussiankernel)
+	bootstrapCB(x, y; xeval=x, B=500, reg=locallinear, lb=-Inf, ub=Inf, kernel=gaussiankernel)
 	
 `B` specifies the number of bootstrap sampling. 
 
  The following functions are also provided:
 
- - `lp0(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlp0(xdata,ydata,kernel))`, local constant regression (or Nadaraya-Watson)
+ - `localconstant(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlocalconstant(xdata,ydata,kernel))`, local constant regression (or Nadaraya-Watson)
 
- - `lp1(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlp0(xdata,ydata,kernel))`,  local linear regression
+ - `locallinear(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlocalconstant(xdata,ydata,kernel))`,  local linear regression
 
 and bandwidth selection functions:
 
@@ -65,9 +65,9 @@ and bandwidth selection functions:
 
  - `bwlcv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estimate by likelihood cross validation
 
- - `bwlp0(xdata, ydata::Vector, kernel)`, bandwidth selection for local constant regression using LSCV
+ - `bwlocalconstant(xdata, ydata::Vector, kernel)`, bandwidth selection for local constant regression using LSCV
 
- - `bwlp1(xdata, ydata::Vector, kernel)`, bandwidth selection for local linear regression using corrected AIC. See reference [6]
+ - `bwlocallinear(xdata, ydata::Vector, kernel)`, bandwidth selection for local linear regression using corrected AIC. See reference [6]
 
 
 
@@ -79,7 +79,7 @@ The meaning of arguments:
 
  - `ydata` is the response vector y; should have same length with `xdata`
 
- - `reg` is the regression function, `lp0` or `lp1`
+ - `reg` is the regression function, `localconstant` or `locallinear`
 
  - `kernel` defaults to be `gaussiankernel`; should be a function
 
@@ -101,10 +101,10 @@ The meaning of arguments:
  - Local regression
  
 		y=2 .* x.^2 + rand(Normal(), 500)
-		yfit0=lp0(x, y, xeval=xeval)
-		yfit1=lp1(x, y, xeval=xeval)
-		yfit0=npr(x, y, xeval=xeval, reg=lp0)
-		yfit1=npr(x, y, xeval=xeval, reg=lp1)
+		yfit0=localconstant(x, y, xeval=xeval)
+		yfit1=locallinear(x, y, xeval=xeval)
+		yfit0=npr(x, y, xeval=xeval, reg=localconstant)
+		yfit1=npr(x, y, xeval=xeval, reg=locallinear)
 
  - Confidence Band
 

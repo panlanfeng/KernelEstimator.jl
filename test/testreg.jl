@@ -11,20 +11,20 @@ denvalues=kde(x, xeval=xeval)
 y=2 .* x.^2 .+ rand(Normal(0,5),500)
 b0, b1 = linreg(x, y)
 regfit = b0 .+ b1 .* x
-yfit0=lp0(x, y, xeval=x)
+yfit0=localconstant(x, y, xeval=x)
 @test sumabs2(regfit .- y) > sumabs2(yfit0.-y)
 
-yfit1=lp1(x, y, xeval=x)
+yfit1=locallinear(x, y, xeval=x)
 @test sumabs2(regfit .- y) > sumabs2(yfit1.-y)
 
-yfit0=npr(x, y, xeval=x, reg=lp0)
+yfit0=npr(x, y, xeval=x, reg=localconstant)
 @test sumabs2(regfit .- y) > sumabs2(yfit0.-y)
 
-yfit1=npr(x, y, xeval=x, reg=lp1)
+yfit1=npr(x, y, xeval=x, reg=locallinear)
 @test sumabs2(regfit .- y) > sumabs2(yfit1.-y)
 
 #confidence band
-yfit1=npr(x, y, xeval=xeval, reg=lp1)
+yfit1=npr(x, y, xeval=xeval, reg=locallinear)
 cb=bootstrapCB(x, y, xeval=xeval)
 @test mean(vec(cb[1,:]) .<= yfit1 .<= vec(cb[2,:])) > .8
 
@@ -42,10 +42,10 @@ denvalues = kde(x, xeval=xeval, kernel=gammakernel, lb=0.0)
 y=2 .* x.^2 + x.*rand(Normal(0, 5), 500)
 b0, b1 = linreg(x, y)
 regfit = b0 .+ b1 .* x
-yfit0=npr(x, y, xeval=x, reg=lp0, kernel=gammakernel,lb=0.0)
+yfit0=npr(x, y, xeval=x, reg=localconstant, kernel=gammakernel,lb=0.0)
 @test sumabs2(regfit .- y) > sumabs2(yfit0.-y)
 
-yfit1=npr(x, y, xeval=x, reg=lp1, kernel=gammakernel, lb=0.0)
+yfit1=npr(x, y, xeval=x, reg=locallinear, kernel=gammakernel, lb=0.0)
 @test sumabs2(regfit .- y) > sumabs2(yfit1.-y)
 
 #bounded beta kernel density and regression
@@ -61,12 +61,12 @@ denvalues=kde(x, xeval=xeval, kernel=betakernel,h=h, lb=0.0,ub=10.0)
 y=2 .* x.^2 + x.*rand(Normal(0, 5), 500)
 b0, b1 = linreg(x, y)
 regfit = b0 .+ b1 .* x
-yfit0=npr(x, y, xeval=x, reg=lp0, kernel=betakernel,lb=0.0, ub=10.0)
+yfit0=npr(x, y, xeval=x, reg=localconstant, kernel=betakernel,lb=0.0, ub=10.0)
 @test sumabs2(regfit .- y) > sumabs2(yfit0.-y)
 
-yfit1=npr(x, y, xeval=x, reg=lp1, kernel=betakernel, lb=0.0,ub=10.0)
+yfit1=npr(x, y, xeval=x, reg=locallinear, kernel=betakernel, lb=0.0,ub=10.0)
 @test sumabs2(regfit .- y) > sumabs2(yfit1.-y)
 
-yfit1=npr(x, y, xeval=xeval, reg=lp1, kernel=betakernel, lb=0.0,ub=10.0)
-cb=bootstrapCB(x, y, xeval=xeval,reg=lp1, kernel=betakernel, lb=0.0,ub=10.0)
+yfit1=npr(x, y, xeval=xeval, reg=locallinear, kernel=betakernel, lb=0.0,ub=10.0)
+cb=bootstrapCB(x, y, xeval=xeval,reg=locallinear, kernel=betakernel, lb=0.0,ub=10.0)
 @test mean(vec(cb[1,:]) .<= yfit1 .<= vec(cb[2,:])) > .8

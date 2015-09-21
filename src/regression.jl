@@ -1,6 +1,6 @@
 #univariate nadaraya-watson estimate
 
-function lp0(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlp0(xdata,ydata,kernel))
+function localconstant(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlocalconstant(xdata,ydata,kernel))
 
     n=length(xdata)
     length(ydata) == n || error("length(ydata) != length(xdata)")
@@ -12,7 +12,7 @@ function lp0(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kern
     end
     pre
 end
-lp0(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlp0(xdata,ydata,kernel)) = lp0(xdata, ydata, xeval = [xeval;], kernel=kernel, h = h)
+localconstant(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlocalconstant(xdata,ydata,kernel)) = localconstant(xdata, ydata, xeval = [xeval;], kernel=kernel, h = h)
 
 function wsumsqdiff(w::RealVector, xdata::RealVector, xeval::Real, n::Int)
     res = 0.0
@@ -30,7 +30,7 @@ function wsumyxdiff(w::RealVector, xdata::RealVector, xeval::Real, ydata::RealVe
 end
 
 ##univariate local linear
-function lp1(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlp1(xdata, ydata, kernel))
+function locallinear(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlocallinear(xdata, ydata, kernel))
     n=length(xdata)
     length(ydata) == n || error("length of ydata not the same with xdata")
     w = ones(n)
@@ -46,7 +46,7 @@ function lp1(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kern
     end
     pre
 end
-lp1(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlp1(xdata,ydata,kernel)) = lp1(xdata, ydata, xeval=[xeval;], kernel=kernel, h=h)
+locallinear(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlocallinear(xdata,ydata,kernel)) = locallinear(xdata, ydata, xeval=[xeval;], kernel=kernel, h=h)
 
 
 
@@ -79,7 +79,7 @@ function boundit(xdata::RealVector, xeval::RealVector, kernel::Function, lb::Rea
 end
 
 function npr(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata,
-        reg::Function=lp1, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
+        reg::Function=locallinear, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
 
     xdata, xeval = boundit(xdata, xeval, kernel, lb, ub)
     if h <= 0
@@ -90,7 +90,7 @@ end
 
 
 # #multi-variate nadaraya-watson regression or local linear
-function lp0(xdata::RealMatrix, ydata::RealVector; kernel::Array{Function, 1}=[gaussiankernel for i in 1:size(xdata)[2]], xeval::RealMatrix=xdata,  h::RealVector=bwlp0(xdata, ydata, kernel))
+function localconstant(xdata::RealMatrix, ydata::RealVector; kernel::Array{Function, 1}=[gaussiankernel for i in 1:size(xdata)[2]], xeval::RealMatrix=xdata,  h::RealVector=bwlocalconstant(xdata, ydata, kernel))
     
     m, p = size(xeval)
     n, p1 = size(xdata)
@@ -116,3 +116,6 @@ function lp0(xdata::RealMatrix, ydata::RealVector; kernel::Array{Function, 1}=[g
     end
     pre
 end
+
+lp0=localconstant
+lp1=locallinear

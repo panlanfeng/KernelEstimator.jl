@@ -21,7 +21,7 @@ function kde(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real
     return kde(xdata, xeval, kernel, h)
 end
 
-kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf) = kde(xdata, xeval=xeval, lb=lb, ub=ub, kernel=kernel, h=h)
+#kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf) = kde(xdata, xeval=xeval, lb=lb, ub=ub, kernel=kernel, h=h)
 
 
 # #univariate kernel density
@@ -131,3 +131,5 @@ function kde(xdata::RealMatrix; xeval::RealMatrix=xdata,
     end
     den
 end
+
+kerneldensity=kde

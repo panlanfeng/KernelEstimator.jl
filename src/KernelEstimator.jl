@@ -14,8 +14,8 @@ import StatsFuns: invsqrt2π, log2π
 
 
 export  kde, kerneldensity, gaussiankernel, ekernel,gammakernel, betakernel,
-        lp0, lp1, npr,
-        bwkd, bwnormal, bwlscv, bwlcv, bwlp0, bwlp1,bwreg,
+        localconstant, locallinear, npr,
+        bwkd, bwnormal, bwlscv, bwlcv, bwlocalconstant, bwlocallinear,bwreg,
 #         Sind,
         bootstrapCB
 #         BootstrapGoodness

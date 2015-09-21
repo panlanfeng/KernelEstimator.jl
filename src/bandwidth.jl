@@ -199,7 +199,7 @@ end
 # end
 
 #leave-one-out LSCV. 1/n \sum((yi - yihat)/(1-wi))
-function lscvlp0(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+function lscvlocalconstant(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
     tmp = 0.0
     ind = 1
     ind_end = 1 + n
@@ -213,7 +213,7 @@ function lscvlp0(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real
     tmp/n
 end
 
-function bwlp0(xdata::RealVector, ydata::RealVector, kernel::Function=gaussiankernel)
+function bwlocalconstant(xdata::RealVector, ydata::RealVector, kernel::Function=gaussiankernel)
     n=length(xdata)
     length(ydata)==n || error("length(ydata) != length(xdata)")
     w = ones(n)
@@ -230,14 +230,14 @@ function bwlp0(xdata::RealVector, ydata::RealVector, kernel::Function=gaussianke
         hlb = h0/n
         hub = h0
     end
-    Optim.optimize(h->lscvlp0(xdata, ydata, kernel, h, w, n), hlb, hub).minimum
+    Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), hlb, hub).minimum
 end
 
 #see reference:Smoothing Parameter Selection in Nonparametric Regression Using an Improved Akaike Information Criterion
 # Clifford M. Hurvich, Jeffrey S. Simonoff and Chih-Ling Tsai
 # Journal of the Royal Statistical Society. Series B (Statistical Methodology), Vol. 60, No. 2 (1998), pp. 271-293
 #http://www.jstor.org/stable/2985940
-function AIClp1(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+function AIClocallinear(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
     tmp = 0.0
     traceH = 0.0
     ind = 1
@@ -257,7 +257,7 @@ function AIClp1(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real,
     tmp/n  + 2*(traceH+1)/(n-traceH-2)
 end
 
-function bwlp1(xdata::RealVector, ydata::RealVector, kernel::Function=gaussiankernel)
+function bwlocallinear(xdata::RealVector, ydata::RealVector, kernel::Function=gaussiankernel)
     n=length(xdata)
     length(ydata)==n || error("length(ydata) != length(xdata)")
     w = ones(n)
@@ -274,15 +274,15 @@ function bwlp1(xdata::RealVector, ydata::RealVector, kernel::Function=gaussianke
         hlb = h0/n
         hub = h0
     end
-    Optim.optimize(h->AIClp1(xdata, ydata, kernel,h, w, n), hlb, hub).minimum
+    Optim.optimize(h->AIClocallinear(xdata, ydata, kernel,h, w, n), hlb, hub).minimum
 end
 
 function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Function=gaussiankernel)
 
-    if reg == lp1
-        return bwlp1(xdata, ydata, kernel)
-    elseif reg == lp0
-        return bwlp0(xdata, ydata, kernel)
+    if reg == locallinear
+        return bwlocallinear(xdata, ydata, kernel)
+    elseif reg == localconstant
+        return bwlocalconstant(xdata, ydata, kernel)
     else
         error("I don't know what is $reg")
     end
@@ -291,7 +291,7 @@ end
 
 
 # #leave-one-out LSCV for multivariate NW
-function lscvlp0(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1}, h::RealVector, w::Vector, n::Int)
+function lscvlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1}, h::RealVector, w::Vector, n::Int)
     if any(h .<= 0.0)
         return Inf
     end
@@ -315,7 +315,7 @@ function lscvlp0(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1
     tmp/n
 end
 
-function bwlp0(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1} = [gaussiankernel for i in 1:size(xdata)[2]])
+function bwlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1} = [gaussiankernel for i in 1:size(xdata)[2]])
     n, p = size(xdata)
     w = ones(n)
     h0 = zeros(p)
@@ -336,14 +336,14 @@ function bwlp0(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1} 
             hub[j] = h0[j]
         end
     end
-    h_output=Optim.optimize(h->lscvlp0(xdata, ydata, kernel, h, w, n), h0).minimum
+    h_output=Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), h0).minimum
     if any(h_output .<= 0.0)
         for j in 1:p
             if h_output[j] .<= 0.0
                 h_output[j] = 2.* h0[j]
             end
         end
-        h_output = Optim.optimize(h->lscvlp0(xdata, ydata, kernel, h, w, n), h_output).minimum
+        h_output = Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), h_output).minimum
     end
     h_output
 end
