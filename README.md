@@ -20,16 +20,16 @@ To install and use this package in Julia,
 This package calculate densities via direct approach, i.e. adding kernel functions together. To add new kernel, you need to define a new function takes the same arguments as `gaussiankernel` and output the kernel weights at given point. If no bandwidth selection function is provide for that kernel, lscv with numeric integration will be used by default. 
 
 ## Functions
-This package provides two major functions, `kde` for kernel density estimation and `npr` for nonparametric regression. For kernel density, you can simply use 
+This package provides two major functions, `kerneldensity` for kernel density estimation and `npr` for nonparametric regression. For kernel density, you can simply use 
 
 	xdata = randn(1000)
-	kde(xdata)
+	kerneldensity(xdata)
 	
 or specify some options
 
 	xeval = linspace(-3, 3, 100)
 	bw = bwlscv(xdata, gaussiankernel)
-	kde(xdata, xeval=xeval, lb=-Inf, ub=Inf, kernel=gaussiankernel,h = bw)
+	kerneldensity(xdata, xeval=xeval, lb=-Inf, ub=Inf, kernel=gaussiankernel,h = bw)
 
 `xeval` specifies the position you want to evaluate the density at. Default to be the same as `xdata`. `lb` and `ub` means lower bound and upper bound of the data. If you specify either of them to be some finite value, user choice of kernel function will be suppressed and `gammakernel` will be used with a warning. If you specify both, `betakernel` is used with a warning if user's choice is different. 
 

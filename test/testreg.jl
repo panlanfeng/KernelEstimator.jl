@@ -1,11 +1,11 @@
 
-##Univariate kde and regression
+##Univariate kerneldensity and regression
 using Distributions
 x=rand(Normal(10), 500)
 xeval=linspace(minimum(x), maximum(x), 100)
 h = bwlscv(x, gaussiankernel)
 @test h>0
-denvalues=kde(x, xeval=xeval)
+denvalues=kerneldensity(x, xeval=xeval)
 @test all(denvalues .>= 0)
 
 y=2 .* x.^2 .+ rand(Normal(0,5),500)
@@ -36,7 +36,7 @@ x = rand(Gamma(4,2), 500)
 xeval = linspace(0.01,20, 100)
 h = bwlscv(x, gammakernel)
 @test h>0
-denvalues = kde(x, xeval=xeval, kernel=gammakernel, lb=0.0)
+denvalues = kerneldensity(x, xeval=xeval, kernel=gammakernel, lb=0.0)
 @test all(denvalues .> 0)
 
 y=2 .* x.^2 + x.*rand(Normal(0, 5), 500)
@@ -53,7 +53,7 @@ x = rand(Beta(4,2), 500) * 10
 xeval = linspace(0, 10, 100)
 h = bwlscv(x./10, betakernel)
 @test h>0
-denvalues=kde(x, xeval=xeval, kernel=betakernel,h=h, lb=0.0,ub=10.0)
+denvalues=kerneldensity(x, xeval=xeval, kernel=betakernel,h=h, lb=0.0,ub=10.0)
 @test all(denvalues .> 0)
 
 

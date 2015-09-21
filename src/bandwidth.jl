@@ -81,7 +81,7 @@ end
 #may also work for other kernels, but likelihood cv has some known disadvantages.
 #Not recommended, but easy to implement for arbitrary kernel
 function lcv(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
-#     -mean(kde(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
+#     -mean(kerneldensity(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
     ind = 1
     ind_end = 1+n
     ll = 0.0
@@ -106,7 +106,7 @@ function bwlcv(xdata::RealVector, kernel::Function)
 end
 
 function lcv(xdata::RealMatrix, kernel::Array{Function, 1}, h::RealVector, w::Vector, n::Int)
-#     -mean(kde(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
+#     -mean(kerneldensity(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
     if any(h .<= 0.0)
         return Inf
     end
@@ -347,20 +347,3 @@ function bwlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{Fun
     end
     h_output
 end
-# function BandwidthLSCVReg(xdata::Matrix{Float64}, ydata::Vector{Float64}, reg::Function=LP0, kernel::Function=GaussianKernel)
-
-#   (n,p)=size(xdata)
-#   h0=BandwidthNormalReference(reshape(xdata[:,1], n))
-
-#   function res(h::Vector{Float64})
-#       ls=0.0
-#       for i in 1:n
-#           # xdata[i,:] is actually a vector, so the returning value is still a vector
-#           ls += abs2(ydata[i] - reg(xdata[i,:],xdata[[1:(i-1),(i+1):end],:], ydata[[1:(i-1),(i+1):end]],kernel,h)[1])
-
-#       end
-#       ls/n
-#   end
-#   optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1 / n
-
-# end

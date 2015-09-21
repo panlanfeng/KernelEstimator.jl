@@ -13,7 +13,7 @@ import StatsFuns: invsqrt2π, log2π
 
 
 
-export  kde, kerneldensity, gaussiankernel, ekernel,gammakernel, betakernel,
+export  kerneldensity, kerneldensity, gaussiankernel, ekernel,gammakernel, betakernel,
         localconstant, locallinear, npr,
         bwkd, bwnormal, bwlscv, bwlcv, bwlocalconstant, bwlocallinear,bwreg,
 #         Sind,
