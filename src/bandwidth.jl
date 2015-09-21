@@ -41,12 +41,6 @@ function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n:
     ll * 2 / (n-1)
 end
 
-# function Jh_betakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
-#     pquadrature(x->begin betakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, betakernel, h, w, n)
-# end
-# function Jh_gammakernel{T<:FloatingPoint}(xdata::Vector{T}, h::T, w::Vector, n::Int, xlb::T, xub::T)
-#     pquadrature(x->begin gammakernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=100)[1] - leaveoneout(xdata, gammakernel, h, w, n)
-# end
 function Jh(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
     pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
@@ -155,48 +149,6 @@ function bwlcv(xdata::RealMatrix, kernel::Array{Function, 1})
     Optim.optimize(h->lcv(xdata, kernel, h, w, n), h0).minimum
 end
 
-# #to be implemented
-# function bwkd(xdata::RealVector, kernel::Function)
-#     n=length(xdata)
-#     h0=bwnormal(xdata)
-#     if kernel==gaussiankernel
-#         return Optim.optimize(h -> Jh(xdata, h), h0/n, n*h0).minimum
-#     elseif kernel==betakernel
-#         return Optim.optimize(h->lcv(xdata, h, kernel), h0^2/n^2, 0.25).minimum
-#     elseif kernel==gammakernel
-#         return Optim.optimize(h->lcv(xdata, h, kernel), h0^2/n^2, n*h0).minimum
-#     else
-#         warn("No bandwidth selector for this kernel, likelihood cross validation is used")
-#         return Optim.optimize(h->lcv(xdata, h, kernel), h0/n^2, n*h0).minimum
-#     end
-# end
-
-
-#multivariate
-# function BandwidthLSCV(xdata::Matrix{Float64}, kernel::KernelType=Gaussian)
-#     (n, p)=size(xdata)
-#     h0=BandwidthNormalReference(reshape(xdata[:,1], n))
-#     function res(h::Vector{Float64})
-#       tmp1=0.0
-#       tmp2=0.0
-#       for i in 1:n
-#         for j in 1:n
-#           if j == i
-#             continue
-#           end
-#           #tmp += kernel(xdata[i], xdata[j], sqrt(2)*h) - 2*kernel(xdata[i], xdata[j], h)
-#           #xdiff = ((xdata[i,:] .- xdata[j,:]) ./ h)^2
-#           #tmp += (2^(-1/2)*exp(-xdiff/4) - 2*exp(-xdiff/2))
-#           xdiff=[(xdata[i,k] - xdata[j,k])::Float64 for k in 1:p]
-#           tmp1 += kernel.Convolution(xdiff, h)
-#           tmp2 += kernel.Density(xdiff,zeros(p),h)
-#         end
-#       end
-#       tmp1 / (n ^ 2) - tmp2 / (n * (n - 1)) * 2 + kernel.Convolution(zeros(p), h)/n
-
-#     end
-#    return optimize(res, [h0 for i in 1:p], iterations=100).minimum .+ .1/n
-# end
 
 #leave-one-out LSCV. 1/n \sum((yi - yihat)/(1-wi))
 function lscvlocalconstant(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
@@ -279,9 +231,9 @@ end
 
 function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Function=gaussiankernel)
 
-    if reg == locallinear
+    if reg == locallinear | reg == lp1
         return bwlocallinear(xdata, ydata, kernel)
-    elseif reg == localconstant
+    elseif reg == localconstant | reg == lp0
         return bwlocalconstant(xdata, ydata, kernel)
     else
         error("I don't know what is $reg")
