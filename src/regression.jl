@@ -51,24 +51,24 @@ locallinear(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function 
 
 
 function boundit(xdata::RealVector, xeval::RealVector, kernel::Function, lb::Real, ub::Real)
-    if (lb == -Inf) & (ub == Inf)
+    if (lb == -Inf) && (ub == Inf)
         return (xdata, xeval)
-    elseif (lb > -Inf) & (ub < Inf)
-        all(lb .<= xeval .<= ub) & all(lb .<= xdata .<= ub) || error("Your data are not in [lb,ub]")
+    elseif (lb > -Inf) && (ub < Inf)
+        (all(lb .<= xeval .<= ub) && all(lb .<= xdata .<= ub)) || error("Your data are not in [lb,ub]")
         xeval = (xeval .- lb)./(ub - lb)
         xdata = (xdata .- lb)./(ub - lb)
         if kernel != betakernel
             warn("Kernel is set to betakernel")
         end
-    elseif (lb > -Inf) & (ub == Inf)
-        all(xeval .>= lb) & all(xdata .>= lb) || error("lb should be less than your data")
+    elseif (lb > -Inf) && (ub == Inf)
+        (all(xeval .>= lb) && all(xdata .>= lb)) || error("lb should be less than your data")
         xeval = xeval .- lb
         xdata = xdata .- lb
         if kernel != gammakernel
             warn("Kernel is set to gammakernel")
         end
-    elseif (lb == -Inf) & (ub < Inf)
-        all(xeval .<= ub) & all(xdata .<= ub) || error("ub should be greater than your data")
+    elseif (lb == -Inf) && (ub < Inf)
+        (all(xeval .<= ub) && all(xdata .<= ub)) || error("ub should be greater than your data")
         xeval = ub .- xeval
         xdata = ub .- xdata
         if kernel != gammakernel

@@ -1,6 +1,5 @@
-rhoxb{T<:FloatingPoint}(x::T, b::T) = 2*b*b + 2.5 - sqrt(4*b^4 + 6*b*b+2.25 - x*x - x/b)
-rhoxb{T<:Real}(x::T, b::T) = rhoxb(float(x), float(b))
-rhoxb(x::Real, b::Real) = rhoxb(promote(x, b)...)
+rhoxb(x::Real, b::Real) = 2*b*b + 2.5 - sqrt(4*b^4 + 6*b*b+2.25 - x*x - x/b)
+
 function multiply!(x::RealVector, y::Real)
     for i in 1:length(x)
         x[i] = x[i]*y

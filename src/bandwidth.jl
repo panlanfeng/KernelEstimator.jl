@@ -231,9 +231,9 @@ end
 
 function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Function=gaussiankernel)
 
-    if reg == locallinear | reg == lp1
+    if (reg == locallinear) || (reg == lp1)
         return bwlocallinear(xdata, ydata, kernel)
-    elseif reg == localconstant | reg == lp0
+    elseif (reg == localconstant) || (reg == lp0)
         return bwlocalconstant(xdata, ydata, kernel)
     else
         error("I don't know what is $reg")
