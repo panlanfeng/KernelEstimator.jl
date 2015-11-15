@@ -42,6 +42,7 @@ end
 function Jh(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
     pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
+#For betakernel
 function Jh(xdata::RealVector, logxdata::RealVector,log1_xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
     pquadrature(x->begin kernel(x, logxdata, log1_xdata, h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, logxdata, log1_xdata, kernel, h, w, n)
 end
@@ -50,6 +51,20 @@ function leaveoneout(xdata::RealVector, logxdata::RealVector, log1_xdata::RealVe
     ll = 0.0
     @inbounds for ind in 1:n
         kernel(xdata[ind], logxdata, log1_xdata, h, w, n)
+        w[ind] = 0.0
+        ll += mean(w)
+    end
+    ll * 2 / (n-1)
+end
+#For gammakernel
+function Jh(xdata::RealVector, logxdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
+    pquadrature(x->begin kernel(x, xdata, logxdata, h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, logxdata, kernel, h, w, n)
+end
+function leaveoneout(xdata::RealVector, logxdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+
+    ll = 0.0
+    @inbounds for ind in 1:n
+        kernel(xdata[ind], xdata, logxdata, h, w, n)
         w[ind] = 0.0
         ll += mean(w)
     end
@@ -79,6 +94,8 @@ function bwlscv(xdata::RealVector, kernel::Function)
         return Optim.optimize(h -> Jh(xdata, logxdata, log1_xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
     elseif kernel == gammakernel
         xlb = 0.0
+        logxdata = Yeppp.log(xdata)
+        return Optim.optimize(h -> Jh(xdata, logxdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
     end
     return Optim.optimize(h -> Jh(xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
 end

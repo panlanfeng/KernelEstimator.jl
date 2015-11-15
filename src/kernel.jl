@@ -1,10 +1,11 @@
 rhoxb(x::Real, b::Real) = 2*b*b + 2.5 - sqrt(4*b^4 + 6*b*b+2.25 - x*x - x/b)
 
-function multiply!(x::RealVector, y::Real)
+function multiply!(des::RealVector, x::RealVector, y::Real)
     for i in 1:length(x)
-        @inbounds x[i] = x[i]*y
+        @inbounds des[i] = x[i]*y
     end
 end
+multiply!(x::RealVector, y::Real) = multiply!(x, x, y)
 function divide!(des::RealVector, x::RealVector, y::Real)
     for i in 1:length(x)
         @inbounds des[i] = x[i]/y
@@ -93,7 +94,26 @@ function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     Yeppp.exp!(w, w)
     nothing
 end
+function gammakernel(x::Real, xdata::RealVector, logxdata::RealVector, h::Real, w::Vector, n::Int)
+    rhob = x/h
+    if x <= 0
+        fill!(w, 0.0)
+        return nothing
+    elseif x < 2*h
+        rhob = 0.25 * rhob * rhob + 1.0
+    end
 
+    # Yeppp.log!(w, xdata)
+    multiply!(w, logxdata, rhob-1.0)
+    tmp = -rhob*log(h)-lgamma(rhob)
+    add!(w, tmp)
+    h1 = 1/h
+    for ind in 1:n
+        @inbounds w[ind] -= xdata[ind] * h1
+    end
+    Yeppp.exp!(w, w)
+    nothing
+end
 
 function gaussiankernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     ind = 1
