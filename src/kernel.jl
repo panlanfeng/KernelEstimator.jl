@@ -2,15 +2,21 @@ rhoxb(x::Real, b::Real) = 2*b*b + 2.5 - sqrt(4*b^4 + 6*b*b+2.25 - x*x - x/b)
 
 function multiply!(x::RealVector, y::Real)
     for i in 1:length(x)
-        x[i] = x[i]*y
+        @inbounds x[i] = x[i]*y
     end
 end
-function divide!(x::RealVector, y::Real)
+function divide!(des::RealVector, x::RealVector, y::Real)
     for i in 1:length(x)
-        x[i] = x[i]/y
+        @inbounds des[i] = x[i]/y
     end
 end
-
+divide!(x::RealVector, y::Real) = divide!(x, x, y)
+function minus!(des::RealVector, y::Float64, x::RealVector, n::Int64=length(x))
+   for i in 1:n
+       @inbounds des[i] = y - x[i]
+   end
+   nothing
+end
 function add!(x::Vector{Float64}, y::Float64, n::Int64=length(x))
    for i in 1:n
        @inbounds x[i] = x[i] + y
@@ -22,7 +28,7 @@ end
 function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     a = x / h - 1
     b = (1 - x) / h - 1
-    if (x < 0) | (x > 1)
+    if (x < 0) || (x > 1)
         fill!(w, 0.0)
         return nothing
     elseif x < 2h
@@ -30,18 +36,41 @@ function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     elseif x>1-2*h
         b = rhoxb(1-x, h) - 1
     end
-
-    ind = 1
-    ind_end = 1+n
-    @inbounds while ind < ind_end
-        w[ind] = a * log(xdata[ind]) + b * log(1 - xdata[ind]) #xdata[ind] ^ a * (1 - xdata[ind]) ^ b
-        ind += 1
+    
+    minus!(w, 1.0, xdata, n)
+    Yeppp.log!(w, w)
+    wtmp = Yeppp.log(xdata)
+    multiply!(w, b)
+    multiply!(wtmp, a)
+    Yeppp.add!(w, w, wtmp)
+     
+    # for ind in 1:n
+    #     @inbounds w[ind] = a * log(xdata[ind]) + b * log(1 - xdata[ind])
+    # end
+    
+    add!(w, -lbeta(a+1, b+1))
+    Yeppp.exp!(w, w)
+    nothing
+end
+function betakernel(x::Real, logxdata::RealVector, log1_xdata::RealVector, h::Real, w::Vector, n::Int)
+    a = x / h - 1
+    b = (1 - x) / h - 1
+    if (x < 0) || (x > 1)
+        fill!(w, 0.0)
+        return nothing
+    elseif x < 2h
+        a =  rhoxb(x, h) - 1
+    elseif x>1-2*h
+        b = rhoxb(1-x, h) - 1
+    end
+    
+    for ind in 1:n
+        @inbounds w[ind] = a * logxdata[ind] + b * log1_xdata[ind]
     end
     add!(w, -lbeta(a+1, b+1))
     Yeppp.exp!(w, w)
     nothing
 end
-
 #f̂(x) = 1/n ∑ᵢ K(xᵢ;x /b+1, b )
 #xdata should be positive, or domain error will be raised.
 function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)

@@ -29,14 +29,12 @@ end
 
 #leave one out
 function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
-    ind = 1
-    ind_end = 1+n
+
     ll = 0.0
-    @inbounds while ind < ind_end
+    @inbounds for ind in 1:n
         kernel(xdata[ind], xdata, h, w, n)
         w[ind] = 0.0
         ll += mean(w)
-        ind += 1
     end
     ll * 2 / (n-1)
 end
@@ -44,7 +42,19 @@ end
 function Jh(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
     pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
+function Jh(xdata::RealVector, logxdata::RealVector,log1_xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
+    pquadrature(x->begin kernel(x, logxdata, log1_xdata, h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, logxdata, log1_xdata, kernel, h, w, n)
+end
+function leaveoneout(xdata::RealVector, logxdata::RealVector, log1_xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
 
+    ll = 0.0
+    @inbounds for ind in 1:n
+        kernel(xdata[ind], logxdata, log1_xdata, h, w, n)
+        w[ind] = 0.0
+        ll += mean(w)
+    end
+    ll * 2 / (n-1)
+end
 #Least Squares cross validation for Gaussian Kernel
 #May fail to work if there are multiple equial x_i
 # Silverman suggest search interval be (0.25, 1.5)n^(-0.2)σ
@@ -64,6 +74,9 @@ function bwlscv(xdata::RealVector, kernel::Function)
         xlb = 0.0
         xub = 1.0
         hub = 0.25
+        logxdata = Yeppp.log(xdata)
+        log1_xdata = Yeppp.log(1.0 .- xdata)
+        return Optim.optimize(h -> Jh(xdata, logxdata, log1_xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
     elseif kernel == gammakernel
         xlb = 0.0
     end
