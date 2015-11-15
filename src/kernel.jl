@@ -82,14 +82,14 @@ function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
         rhob = 0.25 * rhob * rhob + 1.0
     end
 
-    ind = 1
-    ind_end = 1+n
-    @inbounds while ind < ind_end
-        xi_b = xdata[ind] / h
-        w[ind] = -xi_b+(rhob-1.0)*log(xi_b) #StatsFuns.gammapdf(rhob, h, xdata[ind])
-        ind += 1
+    Yeppp.log!(w, xdata)
+    multiply!(w, rhob-1.0)
+    tmp = -rhob*log(h)-lgamma(rhob)
+    add!(w, tmp)
+    h1 = 1/h
+    for ind in 1:n
+        @inbounds w[ind] -= xdata[ind] * h1
     end
-    add!(w, -log(h) - lgamma(rhob))
     Yeppp.exp!(w, w)
     nothing
 end
