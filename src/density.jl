@@ -1,7 +1,7 @@
 
 function kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
 
-    xdata, xeval = boundit(xdata, xeval, kernel, lb, ub)
+    xdata, xeval, kernel = boundit(xdata, xeval, kernel, lb, ub)
     if h <= 0
         h = bwlscv(xdata, kernel)
     end

@@ -6,7 +6,7 @@ function bootstrapCB(xdata::RealVector, ydata::RealVector;
     y_matrix=zeros(B, length(xeval))
     cb=zeros(2, length(xeval))
 
-    xdata, xeval = boundit(xdata, xeval, kernel, lb, ub)
+    xdata, xeval, kernel = boundit(xdata, xeval, kernel, lb, ub)
     if h <= 0
         h = bwreg(xdata, ydata, reg, kernel)
     end
@@ -61,4 +61,3 @@ end
 #   end
 #   cb
 # end
-

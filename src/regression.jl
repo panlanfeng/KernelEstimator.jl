@@ -52,13 +52,14 @@ locallinear(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function 
 
 function boundit(xdata::RealVector, xeval::RealVector, kernel::Function, lb::Real, ub::Real)
     if (lb == -Inf) && (ub == Inf)
-        return (xdata, xeval)
+        return (xdata, xeval, kernel)
     elseif (lb > -Inf) && (ub < Inf)
         (all(lb .<= xeval .<= ub) && all(lb .<= xdata .<= ub)) || error("Your data are not in [lb,ub]")
         xeval = (xeval .- lb)./(ub - lb)
         xdata = (xdata .- lb)./(ub - lb)
         if kernel != betakernel
             warn("Kernel is set to betakernel")
+            kernel = betakernel
         end
     elseif (lb > -Inf) && (ub == Inf)
         (all(xeval .>= lb) && all(xdata .>= lb)) || error("lb should be less than your data")
@@ -66,6 +67,7 @@ function boundit(xdata::RealVector, xeval::RealVector, kernel::Function, lb::Rea
         xdata = xdata .- lb
         if kernel != gammakernel
             warn("Kernel is set to gammakernel")
+            kernel = gammakernel
         end
     elseif (lb == -Inf) && (ub < Inf)
         (all(xeval .<= ub) && all(xdata .<= ub)) || error("ub should be greater than your data")
@@ -73,15 +75,16 @@ function boundit(xdata::RealVector, xeval::RealVector, kernel::Function, lb::Rea
         xdata = ub .- xdata
         if kernel != gammakernel
              warn("Kernel is set to gamma kernel")
+             kernel = gammakernel
         end
     end
-    (xdata, xeval)
+    (xdata, xeval, kernel)
 end
 
 function npr(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata,
         reg::Function=locallinear, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
 
-    xdata, xeval = boundit(xdata, xeval, kernel, lb, ub)
+    xdata, xeval, kernel = boundit(xdata, xeval, kernel, lb, ub)
     if h <= 0
         h = bwreg(xdata, ydata, reg, kernel)
     end
