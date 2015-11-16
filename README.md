@@ -9,15 +9,18 @@
 
 The Julia package for nonparametric kernel density estimate and regression. This package currently includes univariate kernel density estimate, local constant regression (Nadaraya-Watson regression) and local linear regression. It can also compute the Bootstrap confidence band [4]. 
 
-This package provides Gamma and Beta kernel to deal with bounded density estimation and regression. These two kernels are free of boundary bias for one side and two sides bounded data respectively, see [2, 3]. In particular, least square cross validation (LSCV) bandwidth selection functions are implemented. 
-Bandwidth selection is critical in kernel estimation. LSCV is recommended for kernel density estimation. Likelihood cross validation is provided but should be avoided because of known drawbacks. For regression problem, the bandwidth of local constant regression is selected using LSCV while that for local linear regression is chosen by AIC [6].
+This package provides Gamma and Beta kernel to deal with bounded density estimation and regression. These two kernels are free of boundary bias for one side and two sides bounded data respectively, see [2, 3]. In particular, this package provide least square cross validation (LSCV) bandwidth selection functions for Gamma and Beta kernels.
+ 
+Bandwidth selection is critical in kernel estimation. LSCV is always recommended. Likelihood cross validation is provided but should be avoided because of known drawbacks. For regression problem, the bandwidth of local constant regression is selected using LSCV while that for local linear regression is chosen by AIC [6].
 
 To install and use this package in Julia, 
 
 	Pkg.add("KernelEstimator")
 	using KernelEstimator
 
-This package calculate densities via direct approach, i.e. adding kernel functions together. To add new kernel, you need to define a new function takes the same arguments as `gaussiankernel` and output the kernel weights at given point. If no bandwidth selection function is provide for that kernel, lscv with numeric integration will be used by default. 
+See usage under [`examples/`](examples/) directory.
+
+This package calculate densities via direct approach, i.e. adding kernel functions together. To define new kernel, you need to define a new function takes the same arguments as `gaussiankernel` and output the kernel weights at given point. If no bandwidth selection function is provided, lscv with numeric integration will be used by default. 
 
 ## Functions
 This package provides two major functions, `kerneldensity` for kernel density estimation and `npr` for nonparametric regression. For kernel density, you can simply use 
