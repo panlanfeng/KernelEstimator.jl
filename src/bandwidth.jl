@@ -14,20 +14,38 @@ end
 #J(h) = invsqrt2π/(n²h) ∑ᵢⱼ (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + 2 * invsqrt2π/nh
 #J(h) = 2*invsqrt2π/(n²h) ∑{i<j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2π/sqrt(2)nh
 #For normal kernel
-function Jh(xdata::RealVector, h::Real, n::Int)
-    tmp = 0.0
-    @inbounds for i in 1:(n-1)
-        for j in (i+1):n
-            u = (xdata[i] - xdata[j])/h
-            u = exp(-0.25*u*u)
-            tmp += u/sqrt(2) - 2*u*u
-        end
+# function Jh(xdata::RealVector, h::Real, n::Int)
+#     tmp = 0.0
+#     @inbounds for i in 1:(n-1)
+#         for j in (i+1):n
+#             u = (xdata[i] - xdata[j])/h
+#             # u = exp(-0.25*u*u)
+#             u = -0.25*u*u
+#             u = exp(u)
+#             tmp += u*invsqrt2 - 2*u*u
+#         end
+#     end
+#     2*tmp / (n*n*h) + 1/(sqrt2*n*h)
+# end
+#For gaussiankernel, equivalent to the above one. The above version requires
+#less computing but is inefficient in practice due to the exp function.
+function Jh(xdata::RealVector, h::Real, w::Vector, n::Int)
+    ll = 0.0
+    @inbounds for ind in 1:n
+        gaussiankernel(xdata[ind], xdata, sqrt2*h, w, n)
+        ll += mean(w)
+        # gaussiankernel(xdata[ind], xdata, h, w, n)
+        # w[ind] = 0.0
+        # ll -= 2*mean(w)
     end
-    2*tmp / (n*n*h) + 1/(sqrt(2)*n*h)
+    ll / n - leaveoneout(xdata, gaussiankernel, h, w, n)
 end
 
 
-#leave one out
+#for general kernel
+function Jh(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
+    pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, kernel, h, w, n)
+end
 function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
 
     ll = 0.0
@@ -37,10 +55,6 @@ function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n:
         ll += mean(w)
     end
     ll * 2 / (n-1)
-end
-
-function Jh(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
-    pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
 #For betakernel
 function Jh(xdata::RealVector, logxdata::RealVector,log1_xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
@@ -75,16 +89,17 @@ end
 # Silverman suggest search interval be (0.25, 1.5)n^(-0.2)σ
 function bwlscv(xdata::RealVector, kernel::Function)
     n=length(xdata)
+    w  = zeros(n)
     h0=bwnormal(xdata)
-    if kernel == gaussiankernel
-        return Optim.optimize(h -> Jh(xdata, h, n), 0.01*h0, 10*h0, iterations=200, abs_tol=h0/n).minimum
+    #when n is large, leaveoneout is more expensive than numeric integration
+    if kernel == gaussiankernel && n<200
+        return Optim.optimize(h -> Jh(xdata, h, w, n), 0.01*h0, 10*h0, iterations=200, abs_tol=h0/n).minimum
     end
 
     xlb, xub = extrema(xdata)
     h0=midrange(xdata)
     hlb = h0/n
     hub = h0
-    w  = zeros(n)
     if kernel == betakernel
         xlb = 0.0
         xub = 1.0

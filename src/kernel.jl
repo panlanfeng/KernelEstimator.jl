@@ -1,13 +1,13 @@
 rhoxb(x::Real, b::Real) = 2*b*b + 2.5 - sqrt(4*b^4 + 6*b*b+2.25 - x*x - x/b)
 
-function multiply!(des::RealVector, x::RealVector, y::Real)
-    for i in 1:length(x)
+function multiply!(des::RealVector, x::RealVector, y::Real, n::Int=length(x))
+    for i in 1:n
         @inbounds des[i] = x[i]*y
     end
 end
 multiply!(x::RealVector, y::Real) = multiply!(x, x, y)
-function divide!(des::RealVector, x::RealVector, y::Real)
-    for i in 1:length(x)
+function divide!(des::RealVector, x::RealVector, y::Real, n::Int=length(x))
+    for i in 1:n
         @inbounds des[i] = x[i]/y
     end
 end
@@ -24,8 +24,12 @@ function add!(x::Vector{Float64}, y::Float64, n::Int64=length(x))
    end
    nothing
 end
-
-
+function abs2!(des::RealVector, x::RealVector, n::Int64=length(x))
+   for i in 1:n
+       @inbounds des[i] = abs2(x[i])
+   end
+   nothing
+end
 function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     a = x / h - 1
     b = (1 - x) / h - 1
@@ -116,15 +120,22 @@ function gammakernel(x::Real, xdata::RealVector, logxdata::RealVector, h::Real, 
 end
 
 function gaussiankernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
-    ind = 1
-    ind_end = 1+n
-    @inbounds while ind < ind_end
-        w[ind] = -0.5*abs2((x - xdata[ind])/h)
-        ind += 1
+
+    # for ind in 1:n
+    #     @inbounds w[ind] = normlogpdf(xdata[ind], h, x)
+    # end
+    h1= 1.0/h
+    # minus!(w, x, xdata, n)
+    # multiply!(w, w, h1, n)
+    # abs2!(w, w, n)
+    # multiply!(w, w, -0.5, n)
+    tmp = log(h) + log2π/2
+    for ind in 1:n
+        @inbounds w[ind]=-0.5*abs2((x - xdata[ind])*h1) - tmp
     end
-    #multiply!(w, invsqrt2π / h)
-    add!(w, -log(h) - log(2π)/2)
+    # add!(w, tmp, n)
     Yeppp.exp!(w, w)
+    
     nothing
 end
 function ekernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
