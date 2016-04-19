@@ -1,7 +1,6 @@
 VERSION >= v"0.4" && __precompile__()
 
 module KernelEstimator 
-using Compat
 using Distributions
 using Optim
 using Yeppp
