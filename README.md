@@ -1,5 +1,7 @@
 # KernelEstimator 
 
+[![Join the chat at https://gitter.im/panlanfeng/KernelEstimator.jl](https://badges.gitter.im/panlanfeng/KernelEstimator.jl.svg)](https://gitter.im/panlanfeng/KernelEstimator.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![KernelEstimator](http://pkg.julialang.org/badges/KernelEstimator_0.3.svg)](http://pkg.julialang.org/?pkg=KernelEstimator&ver=0.3)
 [![KernelEstimator](http://pkg.julialang.org/badges/KernelEstimator_0.4.svg)](http://pkg.julialang.org/?pkg=KernelEstimator&ver=0.4)
 
