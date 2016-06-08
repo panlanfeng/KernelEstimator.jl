@@ -93,7 +93,7 @@ function bwlscv(xdata::RealVector, kernel::Function)
     h0=bwnormal(xdata)
     #when n is large, leaveoneout is more expensive than numeric integration
     if kernel == gaussiankernel && n<200
-        return Optim.optimize(h -> Jh(xdata, h, w, n), 0.01*h0, 10*h0, iterations=200, abs_tol=h0/n).minimum
+        return Optim.minimizer(Optim.optimize(h -> Jh(xdata, h, w, n), 0.01*h0, 10*h0, iterations=200, abs_tol=h0/n))
     end
 
     xlb, xub = extrema(xdata)
@@ -106,13 +106,13 @@ function bwlscv(xdata::RealVector, kernel::Function)
         hub = 0.25
         logxdata = Yeppp.log(xdata)
         log1_xdata = Yeppp.log(1.0 .- xdata)
-        return Optim.optimize(h -> Jh(xdata, logxdata, log1_xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
+        return Optim.minimizer(Optim.optimize(h -> Jh(xdata, logxdata, log1_xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2))
     elseif kernel == gammakernel
         xlb = 0.0
         logxdata = Yeppp.log(xdata)
-        return Optim.optimize(h -> Jh(xdata, logxdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
+        return Optim.minimizer(Optim.optimize(h -> Jh(xdata, logxdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2))
     end
-    return Optim.optimize(h -> Jh(xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
+    return Optim.minimizer(Optim.optimize(h -> Jh(xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2))
 end
 
 # likelihood cross validation for beta and gamma kernel
@@ -141,7 +141,7 @@ function bwlcv(xdata::RealVector, kernel::Function)
     if kernel==betakernel
         hub = 0.25
     end
-    return Optim.optimize(h->lcv(xdata,kernel,h,w,n), hlb, hub, iterations=200,abs_tol=h0/n^2).minimum
+    return Optim.minimizer(Optim.optimize(h->lcv(xdata,kernel,h,w,n), hlb, hub, iterations=200,abs_tol=h0/n^2))
 end
 
 function lcv(xdata::RealMatrix, kernel::Array{Function, 1}, h::RealVector, w::Vector, n::Int)
@@ -191,7 +191,7 @@ function bwlcv(xdata::RealMatrix, kernel::Array{Function, 1})
             hub[j] = h0[j]
         end
     end
-    Optim.optimize(h->lcv(xdata, kernel, h, w, n), h0).minimum
+    Optim.minimizer(Optim.optimize(h->lcv(xdata, kernel, h, w, n), h0))
 end
 
 
@@ -227,7 +227,7 @@ function bwlocalconstant(xdata::RealVector, ydata::RealVector, kernel::Function=
         hlb = h0/n
         hub = h0
     end
-    Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), hlb, hub).minimum
+    Optim.minimizer(Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), hlb, hub))
 end
 
 #see reference:Smoothing Parameter Selection in Nonparametric Regression Using an Improved Akaike Information Criterion
@@ -271,7 +271,7 @@ function bwlocallinear(xdata::RealVector, ydata::RealVector, kernel::Function=ga
         hlb = h0/n
         hub = h0
     end
-    Optim.optimize(h->AIClocallinear(xdata, ydata, kernel,h, w, n), hlb, hub).minimum
+    Optim.minimizer(Optim.optimize(h->AIClocallinear(xdata, ydata, kernel,h, w, n), hlb, hub))
 end
 
 function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Function=gaussiankernel)
@@ -333,14 +333,14 @@ function bwlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{Fun
             hub[j] = h0[j]
         end
     end
-    h_output=Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), h0).minimum
+    h_output=Optim.minimizer(Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), h0))
     if any(h_output .<= 0.0)
         for j in 1:p
             if h_output[j] .<= 0.0
                 h_output[j] = 2.* h0[j]
             end
         end
-        h_output = Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), h_output).minimum
+        h_output = Optim.minimizer(Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), h_output))
     end
     h_output
 end
