@@ -1,10 +1,9 @@
 language: julia
 os:
-    - osx 
+    - osx
     - linux
 julia:
     - release
-    - nightly
 notifications:
     email: false
 script:
@@ -12,4 +11,3 @@ script:
     - julia -e 'Pkg.clone(pwd()); Pkg.build("KernelEstimator"); Pkg.test("KernelEstimator"; coverage=true)';
 after_success:
     - julia -e 'cd(Pkg.dir("KernelEstimator")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
-
