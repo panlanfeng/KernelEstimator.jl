@@ -1,9 +1,10 @@
 # KernelEstimator
 
-[![KernelEstimator](http://pkg.julialang.org/badges/KernelEstimator_0.4.svg)](http://pkg.julialang.org/?pkg=KernelEstimator&ver=0.4)
-[![KernelEstimator](http://pkg.julialang.org/badges/KernelEstimator_0.5.svg)](http://pkg.julialang.org/?pkg=KernelEstimator&ver=0.5)
+[![KernelEstimator](http://pkg.julialang.org/badges/KernelEstimator_0.5.svg)](http://pkg.julialang.org/?pkg=KernelEstimator)
+[![KernelEstimator](http://pkg.julialang.org/badges/KernelEstimator_0.6.svg)](http://pkg.julialang.org/?pkg=KernelEstimator)
 
-[![Build Status](https://travis-ci.org/panlanfeng/KernelEstimator.jl.svg?branch=master)](https://travis-ci.org/panlanfeng/KernelEstimator.jl)
+Linux: [![Build Status](https://travis-ci.org/panlanfeng/KernelEstimator.jl.svg?branch=master)](https://travis-ci.org/panlanfeng/KernelEstimator.jl)
+
 [![Coverage Status](https://coveralls.io/repos/panlanfeng/KernelEstimator.jl/badge.svg?branch=master)](https://coveralls.io/r/panlanfeng/KernelEstimator.jl?branch=master)
 
 
