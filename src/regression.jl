@@ -93,8 +93,8 @@ end
 
 
 # #multi-variate nadaraya-watson regression or local linear
-function localconstant(xdata::RealMatrix, ydata::RealVector; kernel::Array{Function, 1}=[gaussiankernel for i in 1:size(xdata)[2]], xeval::RealMatrix=xdata,  h::RealVector=bwlocalconstant(xdata, ydata, kernel))
-    
+function localconstant(xdata::RealMatrix, ydata::RealVector; kernel::Array{Function, 1}=Function[gaussiankernel for i in 1:size(xdata)[2]], xeval::RealMatrix=xdata,  h::RealVector=bwlocalconstant(xdata, ydata, kernel))
+
     m, p = size(xeval)
     n, p1 = size(xdata)
     if p1 != p || length(h) !=p
@@ -104,7 +104,7 @@ function localconstant(xdata::RealMatrix, ydata::RealVector; kernel::Array{Funct
         error("Bandwidth should be positive")
     end
     pre=zeros(m)
-    
+
     for i=1:m
         w = ones(n)
         wtmp = ones(n)

@@ -312,7 +312,7 @@ function lscvlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{F
     tmp/n
 end
 
-function bwlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1} = [gaussiankernel for i in 1:size(xdata)[2]])
+function bwlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1} = Function[gaussiankernel for i in 1:size(xdata)[2]])
     n, p = size(xdata)
     w = ones(n)
     h0 = zeros(p)
