@@ -28,7 +28,12 @@ yfit1=npr(x, y, xeval=xeval, reg=locallinear)
 cb=bootstrapCB(x, y, xeval=xeval)
 @test mean(vec(cb[1,:]) .<= yfit1 .<= vec(cb[2,:])) > .8
 
-
+#multivariate regression
+x = rand(Normal(10), 500, 3)
+y = x * ones(3) .+ x.^2 *ones(3)
+yfit1 = localconstant(x, y, xeval=x)
+regfit = x*inv(x'*x)*x'*y
+@test sum(abs2, regfit .- y) > sum(abs2, yfit1.-y)
 
 
 ###Bounded gamma kernel density and regression
