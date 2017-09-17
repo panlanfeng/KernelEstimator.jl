@@ -1,6 +1,7 @@
 
 ##Univariate kerneldensity and regression
 using Distributions
+srand(2017);
 x=rand(Normal(10), 500)
 xeval=linspace(minimum(x), maximum(x), 100)
 h = bwlscv(x, gaussiankernel)
@@ -27,6 +28,11 @@ yfit1=npr(x, y, xeval=x, reg=locallinear)
 yfit1=npr(x, y, xeval=xeval, reg=locallinear)
 cb=bootstrapCB(x, y, xeval=xeval)
 @test mean(vec(cb[1,:]) .<= yfit1 .<= vec(cb[2,:])) > .8
+
+#multivariate density estimation
+x = rand(Normal(10), 500, 3)
+denvalues = kerneldensity(x, h = [1.0, 1.0, 1.0])
+@test all(denvalues .>= 0)
 
 #multivariate regression
 x = rand(Normal(10), 500, 3)

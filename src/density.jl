@@ -15,11 +15,12 @@ function kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf
     return den
 end
 
-function kerneldensity(xdata::RealMatrix; xeval::RealMatrix=xdata, 
-    kernel::Array{Function, 1}=[gaussiankernel for i in 1:size(xdata)[2]], h::RealVector=bwlcv(xdata, kernel))
-    
+function kerneldensity(xdata::RealMatrix; xeval::RealMatrix=xdata,
+    kernel::Vector=[gaussiankernel for i in 1:size(xdata)[2]], h::RealVector=-Inf .* ones(size(xdata, 2)))
+
     if any(h .<= 0)
-        error("h < 0!")
+        h = bwlcv(xdata, kernel)
+        warn("The user are responsible for giving the bandwidth! The defaults may not work well.")
     end
     m, p=size(xeval)
     n, p1 = size(xdata)

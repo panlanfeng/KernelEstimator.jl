@@ -144,7 +144,7 @@ function bwlcv(xdata::RealVector, kernel::Function)
     return Optim.minimizer(Optim.optimize(h->lcv(xdata,kernel,h,w,n), hlb, hub, iterations=200,abs_tol=h0/n^2))
 end
 
-function lcv(xdata::RealMatrix, kernel::Array{Function, 1}, h::RealVector, w::Vector, n::Int)
+function lcv(xdata::RealMatrix, kernel::Vector, h::RealVector, w::Vector, n::Int)
 #     -mean(kerneldensity(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
     if any(h .<= 0.0)
         return Inf
@@ -170,7 +170,7 @@ function lcv(xdata::RealMatrix, kernel::Array{Function, 1}, h::RealVector, w::Ve
     end
     -ll
 end
-function bwlcv(xdata::RealMatrix, kernel::Array{Function, 1})
+function bwlcv(xdata::RealMatrix, kernel::Vector)
     n, p = size(xdata)
     w = ones(n)
     h0 = zeros(p)
@@ -191,7 +191,12 @@ function bwlcv(xdata::RealMatrix, kernel::Array{Function, 1})
             hub[j] = h0[j]
         end
     end
-    Optim.minimizer(Optim.optimize(h->lcv(xdata, kernel, h, w, n), h0))
+    h = Optim.minimizer(Optim.optimize(h->lcv(xdata, kernel, h, w, n), h0))
+    if all(hlb .<= h .<= hub)
+        return h
+    else
+        return h0
+    end
 end
 
 
