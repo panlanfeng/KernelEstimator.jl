@@ -1,11 +1,6 @@
 # KernelEstimator
 
-[![KernelEstimator](http://pkg.julialang.org/badges/KernelEstimator_0.5.svg)](http://pkg.julialang.org/?pkg=KernelEstimator)
-[![KernelEstimator](http://pkg.julialang.org/badges/KernelEstimator_0.6.svg)](http://pkg.julialang.org/?pkg=KernelEstimator)
-
 Linux: [![Build Status](https://travis-ci.org/panlanfeng/KernelEstimator.jl.svg?branch=master)](https://travis-ci.org/panlanfeng/KernelEstimator.jl)
-
-[![Coverage Status](https://coveralls.io/repos/panlanfeng/KernelEstimator.jl/badge.svg?branch=master)](https://coveralls.io/r/panlanfeng/KernelEstimator.jl?branch=master)
 
 
 The Julia package for nonparametric kernel density estimate and regression. This package currently includes univariate kernel density estimate, local constant regression (Nadaraya-Watson regression) and local linear regression. It can also compute the Bootstrap confidence band [4].

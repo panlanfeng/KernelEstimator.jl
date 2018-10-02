@@ -41,20 +41,20 @@ function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     elseif x>1-2*h
         b = rhoxb(1-x, h) - 1
     end
-    
+
     minus!(w, 1.0, xdata, n)
-    Yeppp.log!(w, w)
-    wtmp = Yeppp.log(xdata)
+    w .= log.(w)
+    wtmp = log.(xdata)
     multiply!(w, b)
     multiply!(wtmp, a)
-    Yeppp.add!(w, w, wtmp)
-     
+    w .= w .+ wtmp
+
     # for ind in 1:n
     #     @inbounds w[ind] = a * log(xdata[ind]) + b * log(1 - xdata[ind])
     # end
-    
+
     add!(w, -lbeta(a+1, b+1))
-    Yeppp.exp!(w, w)
+    w .= exp.(w)
     nothing
 end
 function betakernel(x::Real, logxdata::RealVector, log1_xdata::RealVector, h::Real, w::Vector, n::Int)
@@ -68,12 +68,12 @@ function betakernel(x::Real, logxdata::RealVector, log1_xdata::RealVector, h::Re
     elseif x>1-2*h
         b = rhoxb(1-x, h) - 1
     end
-    
+
     for ind in 1:n
         @inbounds w[ind] = a * logxdata[ind] + b * log1_xdata[ind]
     end
     add!(w, -lbeta(a+1, b+1))
-    Yeppp.exp!(w, w)
+    w .= exp.(w)
     nothing
 end
 #f̂(x) = 1/n ∑ᵢ K(xᵢ;x /b+1, b )
@@ -87,7 +87,7 @@ function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
         rhob = 0.25 * rhob * rhob + 1.0
     end
 
-    Yeppp.log!(w, xdata)
+    w .= log.(xdata)
     multiply!(w, rhob-1.0)
     tmp = -rhob*log(h)-lgamma(rhob)
     add!(w, tmp)
@@ -95,7 +95,7 @@ function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     for ind in 1:n
         @inbounds w[ind] -= xdata[ind] * h1
     end
-    Yeppp.exp!(w, w)
+    w .= exp.(w)
     nothing
 end
 function gammakernel(x::Real, xdata::RealVector, logxdata::RealVector, h::Real, w::Vector, n::Int)
@@ -115,7 +115,7 @@ function gammakernel(x::Real, xdata::RealVector, logxdata::RealVector, h::Real, 
     for ind in 1:n
         @inbounds w[ind] -= xdata[ind] * h1
     end
-    Yeppp.exp!(w, w)
+    w .= exp.(w)
     nothing
 end
 
@@ -134,8 +134,8 @@ function gaussiankernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
         @inbounds w[ind]=-0.5*abs2((x - xdata[ind])*h1) - tmp
     end
     # add!(w, tmp, n)
-    Yeppp.exp!(w, w)
-    
+    w .= exp.(w)
+
     nothing
 end
 function ekernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)

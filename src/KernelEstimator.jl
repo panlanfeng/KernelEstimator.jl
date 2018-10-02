@@ -1,15 +1,14 @@
 VERSION >= v"0.4" && __precompile__()
 
-module KernelEstimator 
+module KernelEstimator
 using Distributions
 using Optim
-using Yeppp
 using StatsBase
-using Cubature
+using HCubature
 import StatsBase: RealVector, RealMatrix
-using StatsFuns
-import StatsFuns: invsqrt2π, log2π, sqrt2, invsqrt2
-# Compat.@irrational invsqrt2π 0.398942280401432677939946 big(1.)/sqrt(big(2.)*π)
+
+using Distributions: invsqrt2π, log2π, sqrt2, invsqrt2
+using SpecialFunctions
 
 
 

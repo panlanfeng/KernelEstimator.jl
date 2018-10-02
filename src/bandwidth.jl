@@ -44,7 +44,7 @@ end
 
 #for general kernel
 function Jh(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
-    pquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, kernel, h, w, n)
+    hquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
 function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
 
@@ -58,7 +58,7 @@ function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n:
 end
 #For betakernel
 function Jh(xdata::RealVector, logxdata::RealVector,log1_xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
-    pquadrature(x->begin kernel(x, logxdata, log1_xdata, h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, logxdata, log1_xdata, kernel, h, w, n)
+    hquadrature(x->begin kernel(x, logxdata, log1_xdata, h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, logxdata, log1_xdata, kernel, h, w, n)
 end
 function leaveoneout(xdata::RealVector, logxdata::RealVector, log1_xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
 
@@ -72,7 +72,7 @@ function leaveoneout(xdata::RealVector, logxdata::RealVector, log1_xdata::RealVe
 end
 #For gammakernel
 function Jh(xdata::RealVector, logxdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
-    pquadrature(x->begin kernel(x, xdata, logxdata, h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, logxdata, kernel, h, w, n)
+    hquadrature(x->begin kernel(x, xdata, logxdata, h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, logxdata, kernel, h, w, n)
 end
 function leaveoneout(xdata::RealVector, logxdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
 
@@ -104,12 +104,12 @@ function bwlscv(xdata::RealVector, kernel::Function)
         xlb = 0.0
         xub = 1.0
         hub = 0.25
-        logxdata = Yeppp.log(xdata)
-        log1_xdata = Yeppp.log(1.0 .- xdata)
+        logxdata = log.(xdata)
+        log1_xdata = log.(1.0 .- xdata)
         return Optim.minimizer(Optim.optimize(h -> Jh(xdata, logxdata, log1_xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2))
     elseif kernel == gammakernel
         xlb = 0.0
-        logxdata = Yeppp.log(xdata)
+        logxdata = log.(xdata)
         return Optim.minimizer(Optim.optimize(h -> Jh(xdata, logxdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2))
     end
     return Optim.minimizer(Optim.optimize(h -> Jh(xdata, kernel, h, w, n, xlb,xub), hlb, hub, iterations=200,abs_tol=h0/n^2))
@@ -342,7 +342,7 @@ function bwlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{Fun
     if any(h_output .<= 0.0)
         for j in 1:p
             if h_output[j] .<= 0.0
-                h_output[j] = 2.* h0[j]
+                h_output[j] = 2 .* h0[j]
             end
         end
         h_output = Optim.minimizer(Optim.optimize(h->lscvlocalconstant(xdata, ydata, kernel, h, w, n), h_output))

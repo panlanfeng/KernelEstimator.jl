@@ -1,9 +1,12 @@
 
 ##Univariate kerneldensity and regression
 using Distributions
-srand(2017);
+Random.seed!(2017);
+
+linreg(x, y) = hcat(fill!(similar(x), 1), x) \ y
+
 x=rand(Normal(10), 500)
-xeval=linspace(minimum(x), maximum(x), 100)
+xeval=range(minimum(x), stop=maximum(x), length=100)
 h = bwlscv(x, gaussiankernel)
 @test h>0
 denvalues=kerneldensity(x, xeval=xeval)
@@ -44,7 +47,7 @@ regfit = x*inv(x'*x)*x'*y
 
 ###Bounded gamma kernel density and regression
 x = rand(Gamma(4,2), 500)
-xeval = linspace(0.01,20, 100)
+xeval = range(0.01, stop=20, length=100)
 h = bwlscv(x, gammakernel)
 @test h>0
 denvalues = kerneldensity(x, xeval=xeval, kernel=gammakernel, lb=0.0)
@@ -61,7 +64,7 @@ yfit1=npr(x, y, xeval=x, reg=locallinear, kernel=gammakernel, lb=0.0)
 
 #bounded beta kernel density and regression
 x = rand(Beta(4,2), 500) * 10
-xeval = linspace(0, 10, 100)
+xeval = range(0, stop=10, length=100)
 h = bwlscv(x./10, betakernel)
 @test h>0
 denvalues=kerneldensity(x, xeval=xeval, kernel=betakernel,h=h, lb=0.0,ub=10.0)

@@ -1,5 +1,6 @@
 using KernelEstimator
-using Base.Test
-
+using Test
+using Random
+using StatsBase
 # write your own tests here
 include("testreg.jl")
