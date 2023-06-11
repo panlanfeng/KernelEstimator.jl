@@ -1,18 +1,18 @@
 rhoxb(x::Real, b::Real) = 2*b*b + 2.5 - sqrt(4*b^4 + 6*b*b+2.25 - x*x - x/b)
 
-function multiply!(des::RealVector, x::RealVector, y::Real, n::Int=length(x))
+function multiply!(des::AbstractVector{<:Real}, x::AbstractVector{<:Real}, y::Real, n::Int=length(x))
     for i in 1:n
         @inbounds des[i] = x[i]*y
     end
 end
-multiply!(x::RealVector, y::Real) = multiply!(x, x, y)
-function divide!(des::RealVector, x::RealVector, y::Real, n::Int=length(x))
+multiply!(x::AbstractVector{<:Real}, y::Real) = multiply!(x, x, y)
+function divide!(des::AbstractVector{<:Real}, x::AbstractVector{<:Real}, y::Real, n::Int=length(x))
     for i in 1:n
         @inbounds des[i] = x[i]/y
     end
 end
-divide!(x::RealVector, y::Real) = divide!(x, x, y)
-function minus!(des::RealVector, y::Float64, x::RealVector, n::Int64=length(x))
+divide!(x::AbstractVector{<:Real}, y::Real) = divide!(x, x, y)
+function minus!(des::AbstractVector{<:Real}, y::Float64, x::AbstractVector{<:Real}, n::Int64=length(x))
    for i in 1:n
        @inbounds des[i] = y - x[i]
    end
@@ -24,13 +24,13 @@ function add!(x::Vector{Float64}, y::Float64, n::Int64=length(x))
    end
    nothing
 end
-function abs2!(des::RealVector, x::RealVector, n::Int64=length(x))
+function abs2!(des::AbstractVector{<:Real}, x::AbstractVector{<:Real}, n::Int64=length(x))
    for i in 1:n
        @inbounds des[i] = abs2(x[i])
    end
    nothing
 end
-function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
+function betakernel(x::Real, xdata::AbstractVector{<:Real}, h::Real, w::Vector, n::Int)
     a = x / h - 1
     b = (1 - x) / h - 1
     if (x < 0) || (x > 1)
@@ -57,7 +57,7 @@ function betakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     w .= exp.(w)
     nothing
 end
-function betakernel(x::Real, logxdata::RealVector, log1_xdata::RealVector, h::Real, w::Vector, n::Int)
+function betakernel(x::Real, logxdata::AbstractVector{<:Real}, log1_xdata::AbstractVector{<:Real}, h::Real, w::Vector, n::Int)
     a = x / h - 1
     b = (1 - x) / h - 1
     if (x < 0) || (x > 1)
@@ -78,7 +78,7 @@ function betakernel(x::Real, logxdata::RealVector, log1_xdata::RealVector, h::Re
 end
 #f̂(x) = 1/n ∑ᵢ K(xᵢ;x /b+1, b )
 #xdata should be positive, or domain error will be raised.
-function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
+function gammakernel(x::Real, xdata::AbstractVector{<:Real}, h::Real, w::Vector, n::Int)
     rhob = x/h
     if x <= 0
         fill!(w, 0.0)
@@ -98,7 +98,7 @@ function gammakernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
     w .= exp.(w)
     nothing
 end
-function gammakernel(x::Real, xdata::RealVector, logxdata::RealVector, h::Real, w::Vector, n::Int)
+function gammakernel(x::Real, xdata::AbstractVector{<:Real}, logxdata::AbstractVector{<:Real}, h::Real, w::Vector, n::Int)
     rhob = x/h
     if x <= 0
         fill!(w, 0.0)
@@ -119,7 +119,7 @@ function gammakernel(x::Real, xdata::RealVector, logxdata::RealVector, h::Real, 
     nothing
 end
 
-function gaussiankernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
+function gaussiankernel(x::Real, xdata::AbstractVector{<:Real}, h::Real, w::Vector, n::Int)
 
     # for ind in 1:n
     #     @inbounds w[ind] = normlogpdf(xdata[ind], h, x)
@@ -138,7 +138,7 @@ function gaussiankernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
 
     nothing
 end
-function ekernel(x::Real, xdata::RealVector, h::Real, w::Vector, n::Int)
+function ekernel(x::Real, xdata::AbstractVector{<:Real}, h::Real, w::Vector, n::Int)
     ind = 1
     ind_end = 1+n
     @inbounds while ind < ind_end

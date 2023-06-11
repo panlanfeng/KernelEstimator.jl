@@ -1,6 +1,6 @@
 #univariate nadaraya-watson estimate
 
-function localconstant(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlocalconstant(xdata,ydata,kernel))
+function localconstant(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}; xeval::AbstractVector{<:Real}=xdata, kernel::Function=gaussiankernel, h::Real=bwlocalconstant(xdata,ydata,kernel))
 
     n=length(xdata)
     length(ydata) == n || error("length(ydata) != length(xdata)")
@@ -12,16 +12,16 @@ function localconstant(xdata::RealVector, ydata::RealVector; xeval::RealVector=x
     end
     pre
 end
-localconstant(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlocalconstant(xdata,ydata,kernel)) = localconstant(xdata, ydata, xeval = [xeval;], kernel=kernel, h = h)
+localconstant(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlocalconstant(xdata,ydata,kernel)) = localconstant(xdata, ydata, xeval = [xeval;], kernel=kernel, h = h)
 
-function wsumsqdiff(w::RealVector, xdata::RealVector, xeval::Real, n::Int)
+function wsumsqdiff(w::AbstractVector{<:Real}, xdata::AbstractVector{<:Real}, xeval::Real, n::Int)
     res = 0.0
     for i in 1:n
         @inbounds res += w[i]*(xdata[i]-xeval).^2
     end
     res
 end
-function wsumyxdiff(w::RealVector, xdata::RealVector, xeval::Real, ydata::RealVector, n::Int)
+function wsumyxdiff(w::AbstractVector{<:Real}, xdata::AbstractVector{<:Real}, xeval::Real, ydata::AbstractVector{<:Real}, n::Int)
     res = 0.0
     for i in 1:n
         @inbounds res += w[i]*ydata[i]*(xeval-xdata[i])
@@ -30,7 +30,7 @@ function wsumyxdiff(w::RealVector, xdata::RealVector, xeval::Real, ydata::RealVe
 end
 
 ##univariate local linear
-function locallinear(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlocallinear(xdata, ydata, kernel))
+function locallinear(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}; xeval::AbstractVector{<:Real}=xdata, kernel::Function=gaussiankernel, h::Real=bwlocallinear(xdata, ydata, kernel))
     n=length(xdata)
     length(ydata) == n || error("length of ydata not the same with xdata")
     w = ones(n)
@@ -46,11 +46,11 @@ function locallinear(xdata::RealVector, ydata::RealVector; xeval::RealVector=xda
     end
     pre
 end
-locallinear(xdata::RealVector, ydata::RealVector, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlocallinear(xdata,ydata,kernel)) = locallinear(xdata, ydata, xeval=[xeval;], kernel=kernel, h=h)
+locallinear(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}, xeval::Real; kernel::Function = gaussiankernel, h::Real = bwlocallinear(xdata,ydata,kernel)) = locallinear(xdata, ydata, xeval=[xeval;], kernel=kernel, h=h)
 
 
 
-function boundit(xdata::RealVector, xeval::RealVector, kernel::Function, lb::Real, ub::Real)
+function boundit(xdata::AbstractVector{<:Real}, xeval::AbstractVector{<:Real}, kernel::Function, lb::Real, ub::Real)
     if (lb == -Inf) && (ub == Inf)
         return (xdata, xeval, kernel)
     elseif (lb > -Inf) && (ub < Inf)
@@ -81,7 +81,7 @@ function boundit(xdata::RealVector, xeval::RealVector, kernel::Function, lb::Rea
     (xdata, xeval, kernel)
 end
 
-function npr(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata,
+function npr(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}; xeval::AbstractVector{<:Real}=xdata,
         reg::Function=locallinear, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
 
     xdata, xeval, kernel = boundit(xdata, xeval, kernel, lb, ub)
@@ -93,7 +93,7 @@ end
 
 
 # #multi-variate nadaraya-watson regression or local linear
-function localconstant(xdata::RealMatrix, ydata::RealVector; kernel::Array{Function, 1}=Function[gaussiankernel for i in 1:size(xdata)[2]], xeval::RealMatrix=xdata,  h::RealVector=bwlocalconstant(xdata, ydata, kernel))
+function localconstant(xdata::AbstractMatrix{<:Real}, ydata::AbstractVector{<:Real}; kernel::Array{Function, 1}=Function[gaussiankernel for i in 1:size(xdata)[2]], xeval::AbstractMatrix{<:Real}=xdata,  h::AbstractVector{<:Real}=bwlocalconstant(xdata, ydata, kernel))
 
     m, p = size(xeval)
     n, p1 = size(xdata)

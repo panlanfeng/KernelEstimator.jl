@@ -1,0 +1,11 @@
+name = "KernelEstimator"
+uuid = "e8459dcc-5408-418a-be5a-5bde8017c691"
+authors = ["Lanfeng Pan", "Tony Kelman", "Patrick Kofod Mogensen", "droodman <droodman@gmail.com>"]
+version = "0.1.1"
+
+[deps]
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"

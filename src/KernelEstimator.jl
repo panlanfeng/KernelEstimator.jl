@@ -5,7 +5,6 @@ using Distributions
 using Optim
 using StatsBase
 using HCubature
-import StatsBase: RealVector, RealMatrix
 
 using Distributions: invsqrt2π, log2π, sqrt2, invsqrt2
 using SpecialFunctions
