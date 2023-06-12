@@ -1,10 +1,10 @@
 ####bandwidth selector for kernel density
 
 #rule of thumb
-function bwnormal(xdata::RealVector)
+function bwnormal(xdata::AbstractVector{<:Real})
     0.9 * min((quantile(xdata, .75) - quantile(xdata, .25)) / 1.34, std(xdata)) * length(xdata) ^ (-0.2)
 end
-function midrange(x::RealVector)
+function midrange(x::AbstractVector{<:Real})
     lq, uq = quantile(x, [.25, .75])
     uq - lq
 end
@@ -14,7 +14,7 @@ end
 #J(h) = invsqrt2π/(n²h) ∑ᵢⱼ (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + 2 * invsqrt2π/nh
 #J(h) = 2*invsqrt2π/(n²h) ∑{i<j} (exp(-0.25u*u)/sqrt(2) - 2exp(-0.5u*u)) + invsqrt2π/sqrt(2)nh
 #For normal kernel
-# function Jh(xdata::RealVector, h::Real, n::Int)
+# function Jh(xdata::AbstractVector{<:Real}, h::Real, n::Int)
 #     tmp = 0.0
 #     @inbounds for i in 1:(n-1)
 #         for j in (i+1):n
@@ -29,7 +29,7 @@ end
 # end
 #For gaussiankernel, equivalent to the above one. The above version requires
 #less computing but is inefficient in practice due to the exp function.
-function Jh(xdata::RealVector, h::Real, w::Vector, n::Int)
+function Jh(xdata::AbstractVector{<:Real}, h::Real, w::Vector, n::Int)
     ll = 0.0
     @inbounds for ind in 1:n
         gaussiankernel(xdata[ind], xdata, sqrt2*h, w, n)
@@ -43,10 +43,10 @@ end
 
 
 #for general kernel
-function Jh(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
+function Jh(xdata::AbstractVector{<:Real}, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
     hquadrature(x->begin kernel(x, xdata,h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, kernel, h, w, n)
 end
-function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+function leaveoneout(xdata::AbstractVector{<:Real}, kernel::Function, h::Real, w::Vector, n::Int)
 
     ll = 0.0
     @inbounds for ind in 1:n
@@ -57,10 +57,10 @@ function leaveoneout(xdata::RealVector, kernel::Function, h::Real, w::Vector, n:
     ll * 2 / (n-1)
 end
 #For betakernel
-function Jh(xdata::RealVector, logxdata::RealVector,log1_xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
+function Jh(xdata::AbstractVector{<:Real}, logxdata::AbstractVector{<:Real},log1_xdata::AbstractVector{<:Real}, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
     hquadrature(x->begin kernel(x, logxdata, log1_xdata, h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, logxdata, log1_xdata, kernel, h, w, n)
 end
-function leaveoneout(xdata::RealVector, logxdata::RealVector, log1_xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+function leaveoneout(xdata::AbstractVector{<:Real}, logxdata::AbstractVector{<:Real}, log1_xdata::AbstractVector{<:Real}, kernel::Function, h::Real, w::Vector, n::Int)
 
     ll = 0.0
     @inbounds for ind in 1:n
@@ -71,10 +71,10 @@ function leaveoneout(xdata::RealVector, logxdata::RealVector, log1_xdata::RealVe
     ll * 2 / (n-1)
 end
 #For gammakernel
-function Jh(xdata::RealVector, logxdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
+function Jh(xdata::AbstractVector{<:Real}, logxdata::AbstractVector{<:Real}, kernel::Function, h::Real, w::Vector, n::Int, xlb::Real, xub::Real)
     hquadrature(x->begin kernel(x, xdata, logxdata, h,w,n); mean(w)^2; end, xlb, xub, maxevals=200)[1] - leaveoneout(xdata, logxdata, kernel, h, w, n)
 end
-function leaveoneout(xdata::RealVector, logxdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+function leaveoneout(xdata::AbstractVector{<:Real}, logxdata::AbstractVector{<:Real}, kernel::Function, h::Real, w::Vector, n::Int)
 
     ll = 0.0
     @inbounds for ind in 1:n
@@ -87,7 +87,7 @@ end
 #Least Squares cross validation for Gaussian Kernel
 #May fail to work if there are multiple equial x_i
 # Silverman suggest search interval be (0.25, 1.5)n^(-0.2)σ
-function bwlscv(xdata::RealVector, kernel::Function)
+function bwlscv(xdata::AbstractVector{<:Real}, kernel::Function)
     n=length(xdata)
     w  = zeros(n)
     h0=bwnormal(xdata)
@@ -119,7 +119,7 @@ end
 #there seems no other easy way; least square cross validation can be formidable because their convolution have no close form
 #may also work for other kernels, but likelihood cv has some known disadvantages.
 #Not recommended, but easy to implement for arbitrary kernel
-function lcv(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+function lcv(xdata::AbstractVector{<:Real}, kernel::Function, h::Real, w::Vector, n::Int)
 #     -mean(kerneldensity(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
     ind = 1
     ind_end = 1+n
@@ -132,7 +132,7 @@ function lcv(xdata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
     end
     -ll
 end
-function bwlcv(xdata::RealVector, kernel::Function)
+function bwlcv(xdata::AbstractVector{<:Real}, kernel::Function)
     n = length(xdata)
     w = zeros(n)
     h0=midrange(xdata)
@@ -144,7 +144,7 @@ function bwlcv(xdata::RealVector, kernel::Function)
     return Optim.minimizer(Optim.optimize(h->lcv(xdata,kernel,h,w,n), hlb, hub, iterations=200,abs_tol=h0/n^2))
 end
 
-function lcv(xdata::RealMatrix, kernel::Vector, h::RealVector, w::Vector, n::Int)
+function lcv(xdata::AbstractMatrix{<:Real}, kernel::Vector, h::AbstractVector{<:Real}, w::Vector, n::Int)
 #     -mean(kerneldensity(xdata,xdata,kernel,h)) + mean(map(kernel, xdata, xdata, h))
     if any(h .<= 0.0)
         return Inf
@@ -170,7 +170,7 @@ function lcv(xdata::RealMatrix, kernel::Vector, h::RealVector, w::Vector, n::Int
     end
     -ll
 end
-function bwlcv(xdata::RealMatrix, kernel::Vector)
+function bwlcv(xdata::AbstractMatrix{<:Real}, kernel::Vector)
     n, p = size(xdata)
     w = ones(n)
     h0 = zeros(p)
@@ -201,7 +201,7 @@ end
 
 
 #leave-one-out LSCV. 1/n \sum((yi - yihat)/(1-wi))
-function lscvlocalconstant(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+function lscvlocalconstant(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}, kernel::Function, h::Real, w::Vector, n::Int)
     tmp = 0.0
     ind = 1
     ind_end = 1 + n
@@ -215,7 +215,7 @@ function lscvlocalconstant(xdata::RealVector, ydata::RealVector, kernel::Functio
     tmp/n
 end
 
-function bwlocalconstant(xdata::RealVector, ydata::RealVector, kernel::Function=gaussiankernel)
+function bwlocalconstant(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}, kernel::Function=gaussiankernel)
     n=length(xdata)
     length(ydata)==n || error("length(ydata) != length(xdata)")
     w = ones(n)
@@ -239,7 +239,7 @@ end
 # Clifford M. Hurvich, Jeffrey S. Simonoff and Chih-Ling Tsai
 # Journal of the Royal Statistical Society. Series B (Statistical Methodology), Vol. 60, No. 2 (1998), pp. 271-293
 #http://www.jstor.org/stable/2985940
-function AIClocallinear(xdata::RealVector, ydata::RealVector, kernel::Function, h::Real, w::Vector, n::Int)
+function AIClocallinear(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}, kernel::Function, h::Real, w::Vector, n::Int)
     tmp = 0.0
     traceH = 0.0
     ind = 1
@@ -259,7 +259,7 @@ function AIClocallinear(xdata::RealVector, ydata::RealVector, kernel::Function, 
     tmp/n  + 2*(traceH+1)/(n-traceH-2)
 end
 
-function bwlocallinear(xdata::RealVector, ydata::RealVector, kernel::Function=gaussiankernel)
+function bwlocallinear(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}, kernel::Function=gaussiankernel)
     n=length(xdata)
     length(ydata)==n || error("length(ydata) != length(xdata)")
     w = ones(n)
@@ -279,7 +279,7 @@ function bwlocallinear(xdata::RealVector, ydata::RealVector, kernel::Function=ga
     Optim.minimizer(Optim.optimize(h->AIClocallinear(xdata, ydata, kernel,h, w, n), hlb, hub))
 end
 
-function bwreg(xdata::RealVector, ydata::RealVector, reg::Function, kernel::Function=gaussiankernel)
+function bwreg(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}, reg::Function, kernel::Function=gaussiankernel)
 
     if (reg == locallinear) || (reg == lp1)
         return bwlocallinear(xdata, ydata, kernel)
@@ -293,7 +293,7 @@ end
 
 
 # #leave-one-out LSCV for multivariate NW
-function lscvlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1}, h::RealVector, w::Vector, n::Int)
+function lscvlocalconstant(xdata::AbstractMatrix{<:Real}, ydata::AbstractVector{<:Real}, kernel::Array{Function, 1}, h::AbstractVector{<:Real}, w::Vector, n::Int)
     if any(h .<= 0.0)
         return Inf
     end
@@ -317,7 +317,7 @@ function lscvlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{F
     tmp/n
 end
 
-function bwlocalconstant(xdata::RealMatrix, ydata::RealVector, kernel::Array{Function, 1} = Function[gaussiankernel for i in 1:size(xdata)[2]])
+function bwlocalconstant(xdata::AbstractMatrix{<:Real}, ydata::AbstractVector{<:Real}, kernel::Array{Function, 1} = Function[gaussiankernel for i in 1:size(xdata)[2]])
     n, p = size(xdata)
     w = ones(n)
     h0 = zeros(p)

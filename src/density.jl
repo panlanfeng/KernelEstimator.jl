@@ -1,5 +1,5 @@
 
-function kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
+function kerneldensity(xdata::AbstractVector{<:Real}; xeval::AbstractVector{<:Real}=xdata, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf)
 
     xdata, xeval, kernel = boundit(xdata, xeval, kernel, lb, ub)
     if h <= 0
@@ -15,8 +15,8 @@ function kerneldensity(xdata::RealVector; xeval::RealVector=xdata, lb::Real=-Inf
     return den
 end
 
-function kerneldensity(xdata::RealMatrix; xeval::RealMatrix=xdata,
-    kernel::Vector=[gaussiankernel for i in 1:size(xdata)[2]], h::RealVector=-Inf .* ones(size(xdata, 2)))
+function kerneldensity(xdata::AbstractMatrix{<:Real}; xeval::AbstractMatrix{<:Real}=xdata,
+    kernel::Vector=[gaussiankernel for i in 1:size(xdata)[2]], h::AbstractVector{<:Real}=-Inf .* ones(size(xdata, 2)))
 
     if any(h .<= 0)
         h = bwlcv(xdata, kernel)

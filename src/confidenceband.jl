@@ -1,6 +1,6 @@
 #Bootstrap confidence band for univariate nonparametric regression
-function bootstrapCB(xdata::RealVector, ydata::RealVector;
-    xeval::RealVector=xdata, B::Int64=500, reg::Function=locallinear, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf, alpha::Real=0.05)
+function bootstrapCB(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real};
+    xeval::AbstractVector{<:Real}=xdata, B::Int64=500, reg::Function=locallinear, lb::Real=-Inf, ub::Real=Inf, kernel::Function=gaussiankernel, h::Real=-Inf, alpha::Real=0.05)
 
     n=length(xdata)
     y_matrix=zeros(B, length(xeval))

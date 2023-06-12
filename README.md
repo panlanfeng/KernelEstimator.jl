@@ -52,17 +52,17 @@ There is also a function computing the bootstrap confidence interval for regress
 
  The following functions are also provided:
 
- - `localconstant(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlocalconstant(xdata,ydata,kernel))`, local constant regression (or Nadaraya-Watson)
+ - `localconstant(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}; xeval::AbstractVector{<:Real}=xdata, kernel::Function=gaussiankernel, h::Real=bwlocalconstant(xdata,ydata,kernel))`, local constant regression (or Nadaraya-Watson)
 
- - `locallinear(xdata::RealVector, ydata::RealVector; xeval::RealVector=xdata, kernel::Function=gaussiankernel, h::Real=bwlocalconstant(xdata,ydata,kernel))`,  local linear regression
+ - `locallinear(xdata::AbstractVector{<:Real}, ydata::AbstractVector{<:Real}; xeval::AbstractVector{<:Real}=xdata, kernel::Function=gaussiankernel, h::Real=bwlocalconstant(xdata,ydata,kernel))`,  local linear regression
 
 and bandwidth selection functions:
 
  - `bwnormal(xdata::Vector)`, bandwidth selection for density estimate by referencing to normal distribution
 
- - `bwlscv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estimate by least square cross validation
+ - `bwlscv(xdata::AbstractVector{<:Real}, kernel::Function)`, bandwidth selection for density estimate by least square cross validation
 
- - `bwlcv(xdata::RealVector, kernel::Function)`, bandwidth selection for density estimate by likelihood cross validation
+ - `bwlcv(xdata::AbstractVector{<:Real}, kernel::Function)`, bandwidth selection for density estimate by likelihood cross validation
 
  - `bwlocalconstant(xdata, ydata::Vector, kernel)`, bandwidth selection for local constant regression using LSCV
 
